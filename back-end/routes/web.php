@@ -28,13 +28,22 @@ Route::get('/admin', function () {
 })->name('admin');
 
 
-// DTR
+/*
+    DTR
+*/
 Route::get('/dtr', 'DtrController@index')->name('dtr.admin');
 Route::post('/dtr-parseImport', 'DtrController@parseImport')->name('dtr.parseImport');
 Route::post('/dtr-processImport', 'DtrController@processImport')->name('dtr.processImport');
 
-// -PAYROLL
+/*
+    PAYROLL
+*/
 Route::get('/payroll', 'PayrollController@index')->name('payroll.admin');
+
+
+/*
+    EMPLOYEE
+*/
 
 // Employee Index
 Route::get('/employees', 'EmployeeController@index')->name('employees.admin');

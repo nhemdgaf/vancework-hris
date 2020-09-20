@@ -13,14 +13,18 @@ class CreateContactDetailsTable extends Migration
      */
     public function up()
     {
-        Schema::create('contact_details', function (Blueprint $table) {
-            $table->id();
-            $table->string('emp_num')->unique();
-            $table->string('email_address');
-            $table->string('phone_number');
-            $table->string('mobile_number');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('contact_details')) {
+            Schema::create('contact_details', function (Blueprint $table) {
+                $table->id();
+                // $table->string('emp_num')->unique();
+                $table->string('emp_num');
+                $table->foreign('emp_num')->references('emp_num')->on('employees');
+                $table->string('email_address');
+                $table->string('phone_number');
+                $table->string('mobile_number');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -13,15 +13,19 @@ class CreateContributionNumbersTable extends Migration
      */
     public function up()
     {
-        Schema::create('contribution_numbers', function (Blueprint $table) {
-            $table->id();
-            $table->string('emp_num')->unique();
-            $table->string('sss');
-            $table->string('philhealth');
-            $table->string('pagibig');
-            $table->string('tin');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('contribution_numbers')) {
+            Schema::create('contribution_numbers', function (Blueprint $table) {
+                $table->id();
+                // $table->string('emp_num')->unique();
+                $table->string('emp_num');
+                $table->foreign('emp_num')->references('emp_num')->on('employees');
+                $table->string('sss');
+                $table->string('philhealth');
+                $table->string('pagibig');
+                $table->string('tin');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

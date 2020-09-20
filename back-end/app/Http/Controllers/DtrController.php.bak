@@ -8,7 +8,7 @@ use App\Employee;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use App\Http\Requests\CsvImportRequest;
-
+use Illuminate\Support\Facades\DB;
 
 class DtrController extends Controller
 {
@@ -26,132 +26,102 @@ class DtrController extends Controller
     public function parseImport(CsvImportRequest $request)
     {
         $path = $request->file('csv_file')->getPathName();
+        $data = Excel::toArray(new CsvImportRequest, request()->file('csv_file'))[0];
 
-        if ($request->has('header')) {
-            $data = Excel::toArray(new CsvImportRequest, request()->file('csv_file'))[0];
-        } else {
-            $data = array_map('str_getcsv', file($path));
-        }
-
-        // if data is greater than 0 continue else go back to dtr/index
         if (count($data) > 0) {
-            if ($request->has('header')) {
-                $csv_header_fields = [];
-                foreach ($data[0] as $key => $value) {
-                    $csv_header_fields[] = $key;
-                }
+            $csv_header_fields = [];
+            foreach ($data[0] as $key => $value) {
+                $csv_header_fields[] = $key;
             }
 
-            /*  Slice the array.
-                Each row contains data that start from index 0 and end with index 28.
-                dd($csv_data); to show data.
-            */
             $csv_data = array_slice($data, 0, 3);
 
-            // Remove first row from the array
             $csv_data = array_slice($data, 1);
 
-            // dd($csv_data[0][0]);
-
-
-            // Create database entry that contains csv data
             $csv_data_file = CsvData::create([
                 'csv_filename' => $request->file('csv_file')->getClientOriginalName(),
                 'csv_header' => $request->has('header'),
                 'csv_data' => json_encode($data)
             ]);
-
-            /////////////// Added on 06/23/2020 /////////////////////
-            $emp_numbers=[];
-            foreach($csv_data as $row){
-                $emp_numbers[] = $row[0];
-            }
-
-            // Initial Query
-            $employee = Employee::where('emp_num', $emp_numbers[0]);
-            $i = 0;
-            // Add new query if emp_num is more than 1
-            foreach ($emp_numbers as $key => $value) {
-                $i++;
-                if ($i > count($emp_numbers) - 1) {
-                } else {
-                    $employee->orWhere('emp_num', $emp_numbers[$i]);
-                }
-            }
-
-            // Get result
-            $employees = $employee->get();
-            $employees = $employees->map->only(['emp_num', 'last_name', 'first_name', 'middle_name'])->all();
-            $results = [];
-            foreach($employees as $employee){
-                $results[] = array_values($employee);
-            }
-            //////////////////////////////////////////////////////////
-
         } else {
             return redirect()->back();
         }
-        // Added results
-        return view('admin.dtr.import_process', compact('csv_header_fields', 'csv_data', 'csv_data_file', 'results'));
+        return view('admin.dtr.index', compact('csv_header_fields', 'csv_data', 'csv_data_file'));
     }
 
-    // public function processImport(Request $request)
-    // {
-    //     // get CSV JSON data from database
-    //     $data = CsvData::find($request->csv_data_file_id);
+    public function processImport(Request $request)
+    {
+        // get CSV JSON data from database
+        $data = CsvData::find($request->csv_data_file_id);
 
-    //     // Decode CSV data using json_decode
-    //     $csv_data = json_decode($data->csv_data, true);
+        // Decode CSV data using json_decode
+        $csv_data = json_decode($data->csv_data, true);
 
-    //     // Remove first row from the array
-    //     $csv_data = array_slice($csv_data, 1);
+        // Remove first row from the array
+        $csv_data = array_slice($csv_data, 1);
+        // dd($csv_data);
 
+        // Get total number of row of $csv_data
+        $emp_nums = array_map(static function ($array) {
+            return $array[0];
+        }, $csv_data);
+        // dd($emp_nums);
 
-    //     // Get total number of row of $csv_data
-    //     $emp_num = [];
-    //     foreach($csv_data as $row){
-    //         $count = 0;
-    //         if($count == 0){
-    //             $emp_num[] = $row[0];
-    //         }
-    //     }
+        // Get result
+        $employee = Employee::whereIn('emp_num', $emp_nums)
+                            ->orderBy('emp_num', 'asc')
+                            ->get()
+                            ->toArray();
+        $results = $employee;
+        // dd($results);
 
-    //     // Initial Query
-    //     $employee = Employee::where('emp_num', $emp_num[0]);
-    //     $i = 0;
-    //     // Add new query if emp_num is more than 1
-    //     foreach ($emp_num as $key => $value) {
-    //         $i++;
-    //         if($i > count($emp_num)-1){
+        $results_emp_num = array_map(static function ($array) {
+            return $array['emp_num'];
+        }, $results);
+        // dd($results_emp_num);
 
-    //         }else{
-    //             $employee->orWhere('emp_num', $emp_num[$i]);
-    //         }
-    //     }
+        $not_matched = array_diff($emp_nums, $results_emp_num);
+        // dd($not_matched);
 
-    //     // Get result
-    //     $results = $employee->get();
+        $request->fields = array_flip($request->fields);
+        foreach ($csv_data as $row) {
+            if (!(Dtr::where('emp_num', $row[0])->first())) {
+                // Create new Dtr model
+                $dtr = new Dtr();
+                foreach (config('app.db_fields') as $index => $field) {
+                    $dtr->$field = $row[$request->fields[$field]];
+                }
+                // Save to database
+                $dtr->save();
+            }
+        }
 
-    //     // $request->fields = array_flip($request->fields);
-    //     // $count = 0;
-    //     // foreach ($csv_data as $row) {
-    //     //     // Skip first row which is the headers
-    //     //     $count++;
-    //     //     if($count <= 1){
-    //     //         continue;
-    //     //     }
+        $csv = DB::table('dtrs')
+            ->join('employees', 'dtrs.emp_num', '=', 'employees.emp_num')
+            ->select('dtrs.emp_num', 'dtrs.last_name', 'dtrs.first_name', 'dtrs.middle_name')
+            ->whereIn('dtrs.emp_num', $emp_nums)
+            ->orderBy('dtrs.emp_num', 'asc')
+            ->get()->toArray();
+        // dd($csv);
 
-    //     //     // Create new Dtr model
-    //     //     // $dtr = new Dtr();
-    //     //     // foreach (config('app.db_fields') as $index => $field) {
-    //     //     //     $dtr->$field = $row[$request->fields[$field]];
-    //     //     // }
+        // CSV data that is not found on database
+        $csv_nf = DB::table('dtrs')->select('emp_num', 'last_name', 'first_name', 'middle_name')
+            ->whereIn('emp_num', $not_matched)
+            ->get();
+        // dd($csv_nf);
 
-    //     //     // Save to database
-    //     //     // $dtr->save();
-    //     // }
-    //     return view('admin.dtr.import_process', compact('csv_data', 'results'));
-    // }
+        $dt = [];
+        if (!empty($csv)) {
+            for ($i = 0; $i < count($csv); $i++) {
+                $dt[$i][0] = ($csv[$i]->emp_num == $results[$i]['emp_num']) ? 1 : 0;
+                $dt[$i][1] = ($csv[$i]->last_name == $results[$i]['last_name']) ? 1 : 0;
+                $dt[$i][2] = ($csv[$i]->first_name == $results[$i]['first_name']) ? 1 : 0;
+                $dt[$i][3] = ($csv[$i]->middle_name == $results[$i]['middle_name']) ? 1 : 0;
+            }
+        }
+
+        return view('admin.dtr.import_process', compact('csv_data', 'results', 'csv', 'dt', 'csv_nf'));
+    }
 
     /**
      * Show the form for creating a new resource.

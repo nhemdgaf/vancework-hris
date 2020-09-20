@@ -13,17 +13,21 @@ class CreateCompleteAddressesTable extends Migration
      */
     public function up()
     {
-        Schema::create('complete_addresses', function (Blueprint $table) {
-            $table->id();
-            $table->string('emp_num')->unique();
-            $table->string('house_number');
-            $table->string('street');
-            $table->string('city');
-            $table->string('province');
-            $table->string('region');
-            $table->string('zip_code');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('complete_addresses')) {
+            Schema::create('complete_addresses', function (Blueprint $table) {
+                $table->id();
+                // $table->string('emp_num')->unique();
+                $table->string('emp_num');
+                $table->foreign('emp_num')->references('emp_num')->on('employees');
+                $table->string('house_number');
+                $table->string('street');
+                $table->string('city');
+                $table->string('province');
+                $table->string('region');
+                $table->string('zip_code');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

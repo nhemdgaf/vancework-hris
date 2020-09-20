@@ -22,8 +22,13 @@ class EmployeeController extends Controller
         $request->session()->forget('contribution_number');
         $request->session()->forget('employee_profile');
         $request->session()->forget('atm_record');
-        $employees = Employee::all();
-        $employees->load('contactdetail');
+        // $employees = Employee::all();
+        // $employees->load('contactdetail');
+        $employees = Employee::where('emp_num', '>', '1')
+                    ->with('employeeprofile', 'contactdetail', 'atmrecord')
+                    ->orderBy('emp_num', 'asc')
+                    // ->paginate('10');
+                    ->get();
         return view('admin.employees.index', compact('employees'));
     }
 

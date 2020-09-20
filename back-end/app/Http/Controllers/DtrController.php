@@ -8,8 +8,7 @@ use App\Employee;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use App\Http\Requests\CsvImportRequest;
-
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class DtrController extends Controller
 {
@@ -69,7 +68,10 @@ class DtrController extends Controller
         // dd($emp_nums);
 
         // Get result
-        $employee = Employee::whereIn('emp_num', $emp_nums)->orderBy('emp_num', 'asc')->get()->toArray();
+        $employee = Employee::whereIn('emp_num', $emp_nums)
+                            ->orderBy('emp_num', 'asc')
+                            ->get()
+                            ->toArray();
         $results = $employee;
         // dd($results);
 

@@ -13,22 +13,24 @@ class CreateEmployeesTable extends Migration
      */
     public function up()
     {
-        Schema::create('employees', function (Blueprint $table) {
-            $table->id();
-            $table->string('emp_num')->unique();
-            $table->string('last_name');
-            $table->string('first_name');
-            $table->string('middle_name')->nullable();
-            $table->string('suffix', 10)->nullable();
-            $table->string('date_of_birth');
-            $table->unsignedTinyInteger('age');
-            $table->boolean('gender');
-            $table->string('religion')->nullable();
-            $table->string('citizenship')->nullable();
-            $table->string('place_of_birth');
-            $table->string('civil_status');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('employees')) {
+            Schema::create('employees', function (Blueprint $table) {
+                $table->id();
+                $table->string('emp_num')->unique();
+                $table->string('last_name');
+                $table->string('first_name');
+                $table->string('middle_name')->nullable();
+                $table->string('suffix', 10)->nullable();
+                $table->string('date_of_birth');
+                $table->unsignedTinyInteger('age');
+                $table->boolean('gender');
+                $table->string('religion')->nullable();
+                $table->string('citizenship')->nullable();
+                $table->string('place_of_birth');
+                $table->string('civil_status');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

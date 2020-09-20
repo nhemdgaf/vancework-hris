@@ -13,15 +13,19 @@ class CreateAtmRecordsTable extends Migration
      */
     public function up()
     {
-        Schema::create('atm_records', function (Blueprint $table) {
-            $table->id();
-            $table->string('emp_num')->unique();
-            $table->string('card_holder');
-            $table->string('card_number');
-            $table->string('expiry_date');
-            $table->string('cvc');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('atm_records')) {
+            Schema::create('atm_records', function (Blueprint $table) {
+                $table->id();
+                // $table->string('emp_num')->unique();
+                $table->string('emp_num');
+                $table->foreign('emp_num')->references('emp_num')->on('employees');
+                $table->string('card_holder');
+                $table->string('card_number');
+                $table->string('expiry_date');
+                $table->string('cvc');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

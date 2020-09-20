@@ -13,17 +13,21 @@ class CreateAdditionalInformationTable extends Migration
      */
     public function up()
     {
-        Schema::create('additional_information', function (Blueprint $table) {
-            $table->id();
-            $table->string('emp_num')->unique();
-            $table->string('m_first_name');
-            $table->string('m_last_name');
-            $table->string('m_middle_name');
-            $table->string('m_suffix');
-            $table->string('e_contact_person');
-            $table->string('e_mobile_number');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('additional_information')) {
+            Schema::create('additional_information', function (Blueprint $table) {
+                $table->id();
+                // $table->string('emp_num')->unique();
+                $table->string('emp_num');
+                $table->foreign('emp_num')->references('emp_num')->on('employees');
+                $table->string('m_first_name');
+                $table->string('m_last_name');
+                $table->string('m_middle_name');
+                $table->string('m_suffix');
+                $table->string('e_contact_person');
+                $table->string('e_mobile_number');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

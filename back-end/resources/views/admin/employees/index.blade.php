@@ -75,7 +75,7 @@
 
                     <!-- Get all employees using for else loop -->
                     @forelse($employees as $employee)
-                    <tr data-href="/employees/{{ $employee->id }}">
+                    <tr data-href="/employees/{{ $employee->emp_num }}">
                         <td><strong>{{ $employee->emp_num }}</strong></td>
                         <td>{{ $employee->last_name }}, {{ $employee->first_name }}</td>
                         <td>{{ $employee->employeeprofile->date_hired }}</td>
