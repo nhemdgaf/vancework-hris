@@ -1,0 +1,7 @@
+SELECT MIN(dtrs) as dtrs, emp_num, last_name, first_name, middle_name FROM
+(
+  SELECT 'dtrs' as dtrs, dtrs.emp_num, dtrs.last_name, dtrs.first_name, dtrs.middle_name FROM dtrs
+  UNION ALL
+  SELECT 'employees' as employees, employees.emp_num, employees.last_name, employees.first_name, employees.middle_name FROM employees
+) tmp
+GROUP BY emp_num, last_name, first_name, middle_name, middle_name HAVING COUNT(*) = 1 ORDER BY emp_num
