@@ -59,9 +59,10 @@
                         @endif
                     </tbody>
                 </table>
-                <button type="submit" class="btn btn-primary mt-3 dtr-button" id="goPayroll">
+                <a href="/payroll" class="btn btn-primary mt-3 dtr-button">Continue to Payroll</a>
+                {{-- <button type="submit" class="btn btn-primary mt-3 dtr-button" id="goPayroll">
                     Continue to Payroll
-                </button>
+                </button> --}}
             </form>
         </div>
 

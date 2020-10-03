@@ -61,6 +61,27 @@ class DtrController extends Controller
         $csv_data = array_slice($csv_data, 1);
         // dd($csv_data);
 
+        $csv_emp_num = [];
+
+        $request->fields = array_flip($request->fields);
+        foreach ($csv_data as $row) {
+            if (!(Dtr::where('emp_num', $row[0])->first())) {
+                // Create new Dtr model
+                $dtr = new Dtr();
+                foreach (config('app.db_fields') as $index => $field) {
+                    $dtr->$field = $row[$request->fields[$field]];
+                }
+                // Save to database
+                $dtr->save();
+            }else{
+                $double_entry[] = $row[0];
+            }
+        }
+
+        // if($double_entry > 0){
+        //     return view('double-entries');
+        // }
+
         // Get total number of row of $csv_data
         $emp_nums = array_map(static function ($array) {
             return $array[0];
@@ -82,19 +103,6 @@ class DtrController extends Controller
 
         $not_matched = array_diff($emp_nums, $results_emp_num);
         // dd($not_matched);
-
-        $request->fields = array_flip($request->fields);
-        foreach ($csv_data as $row) {
-            if (!(Dtr::where('emp_num', $row[0])->first())) {
-                // Create new Dtr model
-                $dtr = new Dtr();
-                foreach (config('app.db_fields') as $index => $field) {
-                    $dtr->$field = $row[$request->fields[$field]];
-                }
-                // Save to database
-                $dtr->save();
-            }
-        }
 
         $csv = DB::table('dtrs')
             ->join('employees', 'dtrs.emp_num', '=', 'employees.emp_num')
