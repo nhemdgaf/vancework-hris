@@ -14,12 +14,12 @@ class EmployeeSeeder extends Seeder
     public function run()
     {
         factory(Employee::class, 1000)->create()->each(function ($employee) {
-            $employee->contactdetail()->save(factory(ContactDetail::class)->make());
-            $employee->completeaddress()->save(factory(CompleteAddress::class)->make());
-            $employee->additionalinformation()->save(factory(AdditionalInformation::class)->make());
-            $employee->contributionnumber()->save(factory(ContributionNumber::class)->make());
-            $employee->employeeprofile()->save(factory(EmployeeProfile::class)->make());
-            $employee->atmrecord()->save(factory(AtmRecord::class)->make());
+            $employee->contactdetail()->save(factory(App\ContactDetail::class)->make());
+            $employee->completeaddress()->save(factory(App\CompleteAddress::class)->make());
+            $employee->additionalinformation()->save(factory(App\AdditionalInformation::class)->make());
+            $employee->contributionnumber()->save(factory(App\ContributionNumber::class)->make());
+            $employee->employeeprofile()->save(factory(App\EmployeeProfile::class)->make());
+            $employee->atmrecord()->save(factory(App\AtmRecord::class)->make());
         });
     }
 }
