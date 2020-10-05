@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use App\Http\Requests\CsvImportRequest;
 use Illuminate\Support\Facades\DB;
+use PDO;
 
 class DtrController extends Controller
 {
@@ -29,24 +30,16 @@ class DtrController extends Controller
         $data = Excel::toArray(new CsvImportRequest, request()->file('csv_file'))[0];
 
         if (count($data) > 0) {
-            $csv_header_fields = [];
-            foreach ($data[0] as $key => $value) {
-                $csv_header_fields[] = $key;
-            }
-
-            $csv_data = array_slice($data, 0, 3);
-
             $csv_data = array_slice($data, 1);
 
             $csv_data_file = CsvData::create([
                 'csv_filename' => $request->file('csv_file')->getClientOriginalName(),
-                'csv_header' => $request->has('header'),
                 'csv_data' => json_encode($data)
             ]);
         } else {
             return redirect()->back();
         }
-        return view('admin.dtr.index', compact('csv_header_fields', 'csv_data', 'csv_data_file'));
+        return view('admin.dtr.index', compact('csv_data', 'csv_data_file'));
     }
 
     public function processImport(Request $request)
@@ -59,50 +52,68 @@ class DtrController extends Controller
 
         // Remove first row from the array
         $csv_data = array_slice($csv_data, 1);
-        // dd($csv_data);
 
-        $csv_emp_num = [];
+        // Get all emp_num of $csv_data
+        $emp_nums = array_map(static function ($array) {
+            return $array[0];
+        }, $csv_data);
 
-        $request->fields = array_flip($request->fields);
+        // Duplicate emp_num
+        $duplicate = [];
+        foreach(array_count_values($emp_nums) as $emp_num => $count)
+            if($count > 1)
+                $duplicate[] = $emp_num;
+        // dd($duplicate);
+
+        // Get data from database
+        $employees = Employee::with('employeeprofile:emp_num,employment_status')
+                            ->select('emp_num', 'last_name', 'first_name', 'middle_name')
+                            ->whereIn('emp_num', $emp_nums)
+                            ->orderBy('emp_num', 'asc')
+                            ->get()
+                            ->toArray();
+        $results = $employees;
+        // dd($results);
+
+        // Emp_num found in the database
+        $results_emp_num = array_map(static function ($arr) {
+            return $arr['emp_num'];
+        }, $results);
+        dd($results_emp_num);
+
+
+        // Emp_num not found in the database
+        $not_matched = array_diff($emp_nums, $results_emp_num);
+        // dd($not_matched);
+
+
+        // Emp_num that is blacklisted, inactive, or resigned
+        $inactive = [];
+        foreach($results as $result){
+            if($result['employeeprofile']['employment_status'] != 'Active'){
+                $inactive[] = $result['emp_num'];
+            }
+        }
+        // dd($inactive);
+
+
+        /*
+            BELOW CODES ARE NOT DONE YET
+        */
+
+
+        // $request->fields = array_flip($request->fields);
         foreach ($csv_data as $row) {
             if (!(Dtr::where('emp_num', $row[0])->first())) {
                 // Create new Dtr model
                 $dtr = new Dtr();
                 foreach (config('app.db_fields') as $index => $field) {
-                    $dtr->$field = $row[$request->fields[$field]];
+                    $dtr->$field = $row[$index];
                 }
                 // Save to database
                 $dtr->save();
-            }else{
-                $double_entry[] = $row[0];
             }
         }
-
-        // if($double_entry > 0){
-        //     return view('double-entries');
-        // }
-
-        // Get total number of row of $csv_data
-        $emp_nums = array_map(static function ($array) {
-            return $array[0];
-        }, $csv_data);
-        // dd($emp_nums);
-
-        // Get result
-        $employee = Employee::whereIn('emp_num', $emp_nums)
-                            ->orderBy('emp_num', 'asc')
-                            ->get()
-                            ->toArray();
-        $results = $employee;
-        // dd($results);
-
-        $results_emp_num = array_map(static function ($array) {
-            return $array['emp_num'];
-        }, $results);
-        // dd($results_emp_num);
-
-        $not_matched = array_diff($emp_nums, $results_emp_num);
-        // dd($not_matched);
 
         $csv = DB::table('dtrs')
             ->join('employees', 'dtrs.emp_num', '=', 'employees.emp_num')
