@@ -34,11 +34,11 @@
                         @endif
                     </div>
 
-                    {{-- <div class="ml-4 form-check">
+                    <div class="ml-4 form-check">
                         <label>
                             <input type="checkbox" name="header" class="form-check-input" checked> File contains header row?
                         </label>
-                    </div> --}}
+                    </div>
 
                     <div class="form-group">
                         <button class="btn ml-5 btn-outline-warning dtr-button" type="submit">Validate</button>
@@ -103,19 +103,19 @@
                         </tr>
                         @endforeach
                     </tbody>
-                    {{-- <tfoot class="d-none">
+                    <tfoot>
                         <tr>
                             @foreach ($csv_data[0] as $key => $value)
                             <td>
                                 <select name="fields[{{ $key }}]">
                                     @foreach (config('app.db_fields') as $db_field)
-                                    <option value="{{ $db_field }}" @if ($key===$loop->index) selected @endif>{{ $db_field }}</option>
+                                    <option value="{{ (\Request::has('header')) ? $db_field : $loop->index }}" @if ($key===$loop->index) selected @endif>{{ $db_field }}</option>
                                     @endforeach
                                 </select>
                             </td>
                             @endforeach
                         </tr>
-                    </tfoot> --}}
+                    </tfoot>
                 </table>
                 <button type="submit" class="btn btn-primary dtr-button">
                     Import Data
