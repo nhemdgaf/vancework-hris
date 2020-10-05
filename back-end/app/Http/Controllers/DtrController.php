@@ -79,7 +79,7 @@ class DtrController extends Controller
         $results_emp_num = array_map(static function ($arr) {
             return $arr['emp_num'];
         }, $results);
-        dd($results_emp_num);
+        // dd($results_emp_num);
 
 
         // Emp_num not found in the database
