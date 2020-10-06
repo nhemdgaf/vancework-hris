@@ -96,6 +96,44 @@ class DtrController extends Controller
         }
         // dd($inactive);
 
+        $wrong_last_name = [];
+        $wrong_first_name = [];
+        $wrong_last_name = [];
+
+        $zero_manhour = [];
+
+        foreach($results as $result){
+            foreach($csv_data as $csv_datum){
+                if($result['emp_num'] == $csv_datum[0]){
+
+                    // Get emp_num of wrong last name
+                    if($result['last_name'] !== $csv_datum[1]){
+                        $wrong_last_name[] = $csv_datum[0];
+                    }
+
+                    // Get emp_num of wrong first name
+                    if($result['first_name'] !== $csv_datum[2]){
+                        $wrong_first_name[] = $csv_datum[0];
+                    }
+
+                    // Get emp_num of wrong middle name
+                    if($result['middle_name'] !== $csv_datum[3]){
+                        $wrong_middle_name[] = $csv_datum[0];
+                    }
+
+                    $manhour = array_sum(array_slice($csv_datum, 4));
+                    if(!$manhour > 0){
+                        $zero_manhour[] = $csv_datum[0];
+                    }
+
+                }
+            }
+        }
+
+        // dd($wrong_last_name);
+        // dd($wrong_first_name);
+        // dd($wrong_middle_name);
+        // dd($zero_manhour);
 
         /*
             BELOW CODES ARE NOT DONE YET
@@ -103,43 +141,56 @@ class DtrController extends Controller
 
 
         // $request->fields = array_flip($request->fields);
-        foreach ($csv_data as $row) {
-            if (!(Dtr::where('emp_num', $row[0])->first())) {
-                // Create new Dtr model
-                $dtr = new Dtr();
-                foreach (config('app.db_fields') as $index => $field) {
-                    $dtr->$field = $row[$index];
-                }
-                // Save to database
-                $dtr->save();
-            }
+        // foreach ($csv_data as $row) {
+        //     if (!(Dtr::where('emp_num', $row[0])->first())) {
+        //         // Create new Dtr model
+        //         $dtr = new Dtr();
+        //         foreach (config('app.db_fields') as $index => $field) {
+        //             $dtr->$field = $row[$index];
+        //         }
+        //         // Save to database
+        //         $dtr->save();
+        //     }
+        // }
+
+        // $csv = DB::table('dtrs')
+        //     ->join('employees', 'dtrs.emp_num', '=', 'employees.emp_num')
+        //     ->select('dtrs.emp_num', 'dtrs.last_name', 'dtrs.first_name', 'dtrs.middle_name')
+        //     ->whereIn('dtrs.emp_num', $emp_nums)
+        //     ->orderBy('dtrs.emp_num', 'asc')
+        //     ->get()->toArray();
+        // // dd($csv);
+
+        // // CSV data that is not found on database
+        // $csv_nf = DB::table('dtrs')->select('emp_num', 'last_name', 'first_name', 'middle_name')
+        //     ->whereIn('emp_num', $not_matched)
+        //     ->get();
+        // // dd($csv_nf);
+
+        // $dt = [];
+        // if (!empty($csv)) {
+        //     for ($i = 0; $i < count($csv); $i++) {
+        //         $dt[$i][0] = ($csv[$i]->emp_num == $results[$i]['emp_num']) ? 1 : 0;
+        //         $dt[$i][1] = ($csv[$i]->last_name == $results[$i]['last_name']) ? 1 : 0;
+        //         $dt[$i][2] = ($csv[$i]->first_name == $results[$i]['first_name']) ? 1 : 0;
+        //         $dt[$i][3] = ($csv[$i]->middle_name == $results[$i]['middle_name']) ? 1 : 0;
+        //     }
+        // }
+
+        // return view('admin.dtr.import_process', compact('csv_data', 'results', 'csv', 'dt', 'csv_nf'));
+
+        if(count($duplicate) > 0 ||
+           count($not_matched) > 0 ||
+           count($inactive > 0) ||
+           count($wrong_last_name) > 0 ||
+           count($wrong_last_name) > 0 ||
+           count($wrong_middle_name) > 0 ||
+           count($zero_manhour) > 0)
+        {
+           // Return error view
+           return view('admin.dtr.import_process', compact('csv_data', 'duplicate'));
         }
-
-        $csv = DB::table('dtrs')
-            ->join('employees', 'dtrs.emp_num', '=', 'employees.emp_num')
-            ->select('dtrs.emp_num', 'dtrs.last_name', 'dtrs.first_name', 'dtrs.middle_name')
-            ->whereIn('dtrs.emp_num', $emp_nums)
-            ->orderBy('dtrs.emp_num', 'asc')
-            ->get()->toArray();
-        // dd($csv);
-
-        // CSV data that is not found on database
-        $csv_nf = DB::table('dtrs')->select('emp_num', 'last_name', 'first_name', 'middle_name')
-            ->whereIn('emp_num', $not_matched)
-            ->get();
-        // dd($csv_nf);
-
-        $dt = [];
-        if (!empty($csv)) {
-            for ($i = 0; $i < count($csv); $i++) {
-                $dt[$i][0] = ($csv[$i]->emp_num == $results[$i]['emp_num']) ? 1 : 0;
-                $dt[$i][1] = ($csv[$i]->last_name == $results[$i]['last_name']) ? 1 : 0;
-                $dt[$i][2] = ($csv[$i]->first_name == $results[$i]['first_name']) ? 1 : 0;
-                $dt[$i][3] = ($csv[$i]->middle_name == $results[$i]['middle_name']) ? 1 : 0;
-            }
-        }
-
-        return view('admin.dtr.import_process', compact('csv_data', 'results', 'csv', 'dt', 'csv_nf'));
+        return view('admin.dtr.import_process', compact('csv_data'));
     }
 
     /**

@@ -17,85 +17,12 @@
 
         @if(isset($csv_data))
 
-        <!-- First Table;
-             Contains CSV Data
-        -->
-        <div class="col-xl-6 mt-5">
-            <form class="form-horizontal" method="POST" action="{{ route('dtr.processImport') }}">
-                @csrf
-                <input type="hidden" name="csv_data_file_id" value="{{ (isset($csv_data_file->id)) ? $csv_data_file->id : '' }}" />
-                <table id="dtr_table_compare_csv" class="table">
-                    <thead>
-                        <tr>
-                            <th>Emp. No.</th>
-                            <th>Last Name</th>
-                            <th>First Name</th>
-                            <th>Middle Name</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $count = 0; ?>
-                        @foreach ($csv as $row)
-                        <tr>
-                            <td class="{{ (!$dt[$count][0]) ? "bg-danger text-white": "bg-success text-white" }}">{{ $row->emp_num }}</td>
-                            <td class="{{ (!$dt[$count][1]) ? "bg-danger text-white": "bg-success text-white" }}">{{ $row->last_name }}</td>
-                            <td class="{{ (!$dt[$count][2]) ? "bg-danger text-white": "bg-success text-white" }}">{{ $row->first_name }}</td>
-                            <td class="{{ (!$dt[$count][3]) ? "bg-danger text-white": "bg-success text-white" }}">{{ $row->middle_name }}</td>
-                        </tr>
-                        <?php $count++; ?>
-                        @endforeach
-
-                        @if(isset($csv_nf))
-                        <?php if($count >= count($csv)){ ?>
-                            @foreach ($csv_nf as $nf_row)
-                            <tr class="bg-danger text-white">
-                                <td>{{ $nf_row->emp_num }}</td>
-                                <td>{{ $nf_row->last_name }}</td>
-                                <td>{{ $nf_row->first_name }}</td>
-                                <td>{{ $nf_row->middle_name }}</td>
-                            </tr>
-                            @endforeach
-                        <?php } ?>
-                        @endif
-                    </tbody>
-                </table>
-                <a href="/payroll" class="btn btn-primary mt-3 dtr-button">Continue to Payroll</a>
-                {{-- <button type="submit" class="btn btn-primary mt-3 dtr-button" id="goPayroll">
-                    Continue to Payroll
-                </button> --}}
-            </form>
-        </div>
-
-        <!--
-            Second Table;
-            Contains DB Data
-         -->
-        <!-- <div class="col-xl-6 mt-5">
-            <form class="form-horizontal" method="POST" action="{{ route('dtr.processImport') }}">
-                @csrf
-                <input type="hidden" name="csv_data_file_id" value="{{ (isset($csv_data_file->id)) ? $csv_data_file->id : '' }}" />
-                <table id="dtr_table_compare_db" class="table">
-                    <thead>
-                        <tr>
-                            <th>Emp. No.</th>
-                            <th>Last Name</th>
-                            <th>First Name</th>
-                            <th>Middle Name</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($results as $result)
-                        <tr>
-                            <td>{{ $result['emp_num'] }}</td>
-                            <td>{{ $result['last_name'] }}</td>
-                            <td>{{ $result['first_name'] }}</td>
-                            <td>{{ $result['middle_name'] }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </form>
-        </div> -->
+            {{-- Duplicates --}}
+            @if(isset($duplicate))
+                @foreach($duplicate as $dup)
+                    <div>{{ $dup }}</div>
+                @endforeach
+            @endif
 
         @else
         <div class="col-12 mt-5">
