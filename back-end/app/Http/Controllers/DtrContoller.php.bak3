@@ -47,8 +47,6 @@ class DtrController extends Controller
         // get CSV JSON data from database
         $data = CsvData::find($request->csv_data_file_id);
 
-        $csv_filename = $data['csv_filename'];
-
         // Decode CSV data using json_decode
         $csv_data = json_decode($data->csv_data, true);
 
@@ -56,9 +54,14 @@ class DtrController extends Controller
         $csv_data = array_slice($csv_data, 1);
 
 
+
         // Get all emp_num of $csv_data
+        // $emp_nums = array_map(static function ($array) {
+        //     return $array[0];
+        // }, $csv_data);
         $emp_nums = array_column($csv_data, 0);
         // dd($emp_nums);
+
 
 
         // Duplicate emp_num
@@ -68,14 +71,14 @@ class DtrController extends Controller
                 $duplicate[] = $emp_num;
         // dd($duplicate);
 
-
         // Indexes of duplicate emp_num
         $dup_index = [];
-        foreach($duplicate as $dup){
+        foreach($duplicate as $key => $dup){
             // make emp_num as index
-            $dup_index[$dup] = array_keys($emp_nums, $dup);
+            $dup_index[$dup] = array_keys(array_column($csv_data, 0), $dup);
         }
-        // dd($dup_index);
+        //dd($dup_index);
+
 
 
         // Get data from database
@@ -89,9 +92,14 @@ class DtrController extends Controller
         // dd($results);
 
 
-        // Emp_num of results from db
+
+        // Emp_num found in the database
+        // $results_emp_num = array_map(static function ($arr) {
+        //     return $arr['emp_num'];
+        // }, $results);
         $results_emp_num = array_column($results, 'emp_num');
         // dd($results_emp_num);
+
 
 
         // Emp_num not found in the database
@@ -161,9 +169,10 @@ class DtrController extends Controller
            count($zero_manhour) > 0)
         {
            // Return error view
-           return view('admin.dtr.import_error', compact('csv_data', 'csv_filename', 'dup_index', 'not_matched', 'inactive',
+           return view('admin.dtr.import_error', compact('csv_data', 'dup_index', 'not_matched', 'inactive',
             'wrong_last_name', 'wrong_first_name', 'wrong_middle_name','zero_manhour'));
         }
+
 
 
 
@@ -180,6 +189,29 @@ class DtrController extends Controller
             }
         }
 
+        // $csv = DB::table('dtrs')
+        //     ->join('employees', 'dtrs.emp_num', '=', 'employees.emp_num')
+        //     ->select('dtrs.emp_num', 'dtrs.last_name', 'dtrs.first_name', 'dtrs.middle_name')
+        //     ->whereIn('dtrs.emp_num', $emp_nums)
+        //     ->orderBy('dtrs.emp_num', 'asc')
+        //     ->get()->toArray();
+        // // dd($csv);
+
+        // // CSV data that is not found on database
+        // $csv_nf = DB::table('dtrs')->select('emp_num', 'last_name', 'first_name', 'middle_name')
+        //     ->whereIn('emp_num', $not_matched)
+        //     ->get();
+        // // dd($csv_nf);
+
+        // $dt = [];
+        // if (!empty($csv)) {
+        //     for ($i = 0; $i < count($csv); $i++) {
+        //         $dt[$i][0] = ($csv[$i]->emp_num == $results[$i]['emp_num']) ? 1 : 0;
+        //         $dt[$i][1] = ($csv[$i]->last_name == $results[$i]['last_name']) ? 1 : 0;
+        //         $dt[$i][2] = ($csv[$i]->first_name == $results[$i]['first_name']) ? 1 : 0;
+        //         $dt[$i][3] = ($csv[$i]->middle_name == $results[$i]['middle_name']) ? 1 : 0;
+        //     }
+        // }
 
         // return view('admin.dtr.import_process', compact('csv_data', 'results', 'csv', 'dt', 'csv_nf'));
 
