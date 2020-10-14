@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\CsvImportRequest;
 use Illuminate\Support\Facades\DB;
 use PDO;
+use Yoeunes\Toastr\Facades\Toastr;
 
 class DtrController extends Controller
 {
@@ -54,7 +55,6 @@ class DtrController extends Controller
 
         // Remove first row from the array
         $csv_data = array_slice($csv_data, 1);
-
 
         // Get all emp_num of $csv_data
         $emp_nums = array_column($csv_data, 0);
@@ -113,7 +113,7 @@ class DtrController extends Controller
 
         $wrong_last_name = [];
         $wrong_first_name = [];
-        $wrong_last_name = [];
+        $wrong_middle_name = [];
 
         $zero_manhour = [];
 
@@ -154,7 +154,7 @@ class DtrController extends Controller
         // If there's an error. Go to import_error.blade.php
         if(count($duplicate) > 0 ||
            count($not_matched) > 0 ||
-           count($inactive > 0) ||
+           count($inactive) > 0 ||
            count($wrong_last_name) > 0 ||
            count($wrong_first_name) > 0 ||
            count($wrong_middle_name) > 0 ||
@@ -165,25 +165,39 @@ class DtrController extends Controller
             'wrong_last_name', 'wrong_first_name', 'wrong_middle_name','zero_manhour'));
         }
 
+        $csv_file_id = $data->id;
+        // return view('admin.dtr.import_process', compact('csv_data', 'results', 'csv', 'dt', 'csv_nf'));
+        toastr()->success('There\'s no error in the data uploaded');
+        return view('admin.dtr.import_process', compact('csv_data', 'csv_filename', 'emp_num', 'csv_file_id'));
+    }
 
+    public function saveCutOffPeriod(Request $request){
+        // get CSV JSON data from database
+        $data = CsvData::find($request->csv_data_file_id);
 
-        $request->fields = array_flip($request->fields);
+        // Decode CSV data using json_decode
+        $csv_data = json_decode($data->csv_data, true);
+
+        // Remove first row from the array
+        $csv_data = array_slice($csv_data, 1);
+
+        // Get cutoff_date
+        $cutoff_date = $request->cutoff_date;
+
+        // $request->fields = array_flip($request->fields);
         foreach ($csv_data as $row) {
-            if (!(Dtr::where('emp_num', $row[0])->first())) {
-                // Create new Dtr model
-                $dtr = new Dtr();
-                foreach (config('app.db_fields') as $index => $field) {
-                    $dtr->$field = $row[$index];
-                }
-                // Save to database
-                $dtr->save();
+            // Create new Dtr model
+            $dtr = new Dtr();
+            foreach (config('app.db_fields') as $index => $field) {
+                $dtr->$field = $row[$index];
             }
+            $dtr->cutoff_date = $cutoff_date;
+            // Save to database
+            $dtr->save();
         }
 
-
-        // return view('admin.dtr.import_process', compact('csv_data', 'results', 'csv', 'dt', 'csv_nf'));
-
-        return view('admin.dtr.import_process', compact('csv_data'));
+        toastr()->success('Cutoff-period saved!');
+        return view('admin.payroll.index');
     }
 
     /**

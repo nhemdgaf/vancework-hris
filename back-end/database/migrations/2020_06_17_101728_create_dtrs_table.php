@@ -15,10 +15,10 @@ class CreateDtrsTable extends Migration
     {
         Schema::create('dtrs', function (Blueprint $table) {
             $table->id();
-            $table->string('emp_num')->unique();
+            $table->string('emp_num');
             $table->string('last_name');
             $table->string('first_name');
-            $table->string('middle_name');
+            $table->string('middle_name')->nullable();
             $table->string('reg_hours');
             $table->string('late_mins');
             $table->string('reg_ot');
@@ -44,6 +44,7 @@ class CreateDtrsTable extends Migration
             $table->string('nd_spl_hol_ot');
             $table->string('nd_rest_spl_hol');
             $table->string('nd_rest_spl_hol_ot');
+            $table->string('cutoff_date')->nullable;
             $table->timestamps();
         });
     }

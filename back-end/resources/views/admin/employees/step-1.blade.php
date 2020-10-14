@@ -50,9 +50,7 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label class="small mb-1" for="inputSuffix">
-                                        Suffix
-                                    </label>
+                                    <label class="small mb-1" for="inputSuffix">Suffix</label>
                                     <input class="form-control" id="inputSuffix" value="{{ old('suffix') ? old('suffix') : session()->get('employee.suffix') }}" type="text" placeholder="Enter name suffix" name="suffix" />
                                     <p class="text-danger small">@error('suffix') {{ $message }} @enderror</p>
                                 </div>
@@ -62,7 +60,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="small mb-1" for="bday">Date of Birth</label>
-                                    <input class="form-control item" id="bday" value="{{ old('date_of_birth') ? old('date_of_birth') : session()->get('employee.date_of_birth') }}" type="date" placeholder="Date" name="date_of_birth" />
+                                    <input class="form-control" id="bday" value="{{ old('date_of_birth') ? old('date_of_birth') : session()->get('employee.date_of_birth') }}" type="date" placeholder="Date" name="date_of_birth" />
                                     <p class="text-danger small">@error('date_of_birth') {{ $message }} @enderror</p>
                                 </div>
                             </div>

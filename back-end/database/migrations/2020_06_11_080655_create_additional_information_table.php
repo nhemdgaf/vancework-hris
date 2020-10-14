@@ -21,8 +21,8 @@ class CreateAdditionalInformationTable extends Migration
                 $table->foreign('emp_num')->references('emp_num')->on('employees');
                 $table->string('m_first_name');
                 $table->string('m_last_name');
-                $table->string('m_middle_name');
-                $table->string('m_suffix');
+                $table->string('m_middle_name')->nullable();
+                $table->string('m_suffix')->nullable();
                 $table->string('e_contact_person');
                 $table->string('e_mobile_number');
                 $table->timestamps();

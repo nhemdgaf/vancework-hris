@@ -22,13 +22,10 @@ class EmployeeController extends Controller
         $request->session()->forget('contribution_number');
         $request->session()->forget('employee_profile');
         $request->session()->forget('atm_record');
-        // $employees = Employee::all();
-        // $employees->load('contactdetail');
-        $employees = Employee::where('emp_num', '>', '1')
-                    ->with('employeeprofile', 'contactdetail', 'atmrecord')
-                    ->orderBy('emp_num', 'asc')
-                    // ->paginate('10');
-                    ->get();
+
+        $employees = Employee::with('employeeprofile', 'contactdetail', 'atmrecord')
+                             ->orderBy('emp_num', 'asc')
+                             ->get();
         return view('admin.employees.index', compact('employees'));
     }
 
@@ -37,15 +34,19 @@ class EmployeeController extends Controller
     {
         $gender = '';
         $employee = $request->session()->get('employee');
-        if (isset($employee->gender)) {
-            if ($employee->gender === "1") {
-                $gender = true;
-            } else {
-                $gender = false;
-            };
+        if(isset($employee)){
+            if (isset($employee->gender)) {
+                if ($employee->gender === "1") {
+                    $gender = true;
+                } else {
+                    $gender = false;
+                };
+                return view('admin.employees.step-1', compact('employee', $gender));
+            }
         }
-        return view('admin.employees.step-1', compact('employee', $gender));
+        return view('admin.employees.step-1');
     }
+
     public function PostcreateStep1(Request $request)
     {
         $validatedData = $request->validate(

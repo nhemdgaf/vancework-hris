@@ -34,6 +34,7 @@ Route::get('/admin', function () {
 Route::get('/dtr', 'DtrController@index')->name('dtr.admin');
 Route::post('/dtr-parseImport', 'DtrController@parseImport')->name('dtr.parseImport');
 Route::post('/dtr-processImport', 'DtrController@processImport')->name('dtr.processImport');
+Route::post('/dtr-saveCutOff', 'DtrController@saveCutOffPeriod')->name('dtr.saveCutOff');
 
 /*
     PAYROLL

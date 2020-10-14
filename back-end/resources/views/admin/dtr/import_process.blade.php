@@ -12,29 +12,28 @@
     <hr>
     <div class="row">
         <div class="col-xl-12 d-flex justify-content-start align-items-start mt-2">
-            <h5>IMPORT</h5>
+            <h5>Cut-Off Period</h5>
         </div>
 
-        @if(isset($csv_data))
 
-            {{-- Duplicates --}}
-            @if(isset($duplicate))
-                @foreach($duplicate as $dup)
-                    <div>{{ $dup }}</div>
-                @endforeach
-            @endif
+        {{ $csv_file_id }}
+        <div class="col-xl-12">
+            <form class="form-horizontal" method="POST" action="{{ route('dtr.saveCutOff') }}">
+                @csrf
+                <input type="hidden" name="csv_data_file_id" value="{{ (isset($csv_file_id)) ? $csv_file_id : '' }}" />
 
-        @else
-        <div class="col-12 mt-5">
-            <table id="dtr_table" class="table">
-                <tbody>
-                    <tr>
-                        <td>No data to show</td>
-                    </tr>
-                </tbody>
-            </table>
+                <div class="form-group d-flex justify-content-start align-items-start col-xl-6">
+                    <label class="date-label" for="cutoff_date">Please select cut-off period:</label>
+                    <input class="form-control" type="date" id="cutoff_date" name="cutoff_date">
+                </div>
+
+                <div class="form-group d-flex justify-content-start align-items-start col-xl-6">
+                    <button class="btn btn-outline-warning" type="submit">Save Cut-Off</button>
+                </div>
+                {{-- <button class="btn ml-3 btn-outline-warning" type="button" data-toggle="modal" data-target="#ConfirmPosting">Post</button> --}}
+            </form>
         </div>
-        @endif
+
     </div>
 </div>
 @endsection

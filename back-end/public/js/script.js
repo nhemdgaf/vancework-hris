@@ -1,10 +1,7 @@
 $(document).ready(function(){
 
     $('#age').mask('00');
-
-    $('#bday').mask('00');
     $('#ydate').mask('0000');
-
     $('#phone-number').mask('0000-0000');
     $('#mobile-number').mask('0000-000-0000');
 

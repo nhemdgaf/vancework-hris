@@ -14,8 +14,8 @@
     @endsection
     <hr>
     <div class="row">
-        <div class="col-xl-1 d-flex justify-content-start align-items-start mt-2">
-            <h5>IMPORT</h5>
+        <div class="col-xl-2 d-flex justify-content-start align-items-start mt-2">
+            <h5>IMPORT CSV FILE</h5>
         </div>
 
         <div class="col-xl-4">
@@ -41,7 +41,7 @@
                     </div> --}}
 
                     <div class="form-group">
-                        <button class="btn ml-5 btn-outline-warning dtr-button" type="submit">Validate</button>
+                        <button class="btn ml-5 btn-outline-warning dtr-button" type="submit">Upload</button>
                     </div>
                 </div>
             </form>
@@ -118,7 +118,7 @@
                     </tfoot> --}}
                 </table>
                 <button type="submit" class="btn btn-primary dtr-button">
-                    Import Data
+                    Validate Data
                 </button>
             </form>
         </div>
