@@ -125,6 +125,11 @@
         @else
         <div class="col-12 mt-5">
             <table id="dtr_table" class="table">
+                <thead>
+                    <tr>
+                        <td></td>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr>
                         <td>No data to show</td>

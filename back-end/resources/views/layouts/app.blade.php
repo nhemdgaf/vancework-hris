@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     @toastr_css
+    <script src="{{ asset('js/jquery.min.js') }}"></script>
 </head>
 
 <body id="page-top">
@@ -54,7 +55,6 @@
         <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
     </div>
 
-    <script src="{{ asset('js/jquery.min.js') }}"></script>
     <!-- <script src="{{ asset('js/pre_loader.js') }}"></script> -->
     <script src="{{ asset('bootstrap/js/bootstrap.min.js') }}"></script>
     <script>

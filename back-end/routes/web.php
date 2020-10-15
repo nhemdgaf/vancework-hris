@@ -35,11 +35,15 @@ Route::get('/dtr', 'DtrController@index')->name('dtr.admin');
 Route::post('/dtr-parseImport', 'DtrController@parseImport')->name('dtr.parseImport');
 Route::post('/dtr-processImport', 'DtrController@processImport')->name('dtr.processImport');
 Route::post('/dtr-saveCutOff', 'DtrController@saveCutOffPeriod')->name('dtr.saveCutOff');
+Route::post('/dtr-deleteDtrs', 'DtrController@deleteDtrs')->name('dtr.deleteDtrs');
+// Route::get('/dtr-summary', 'DtrContoller@fetchDtrSummary')->name('dtr.summary');
 
 /*
     PAYROLL
 */
 Route::get('/payroll', 'PayrollController@index')->name('payroll.admin');
+Route::post('/fetch-stores', 'PayrollController@showStores')->name('payroll.showStores');
+Route::post('/process-summary', 'PayrollController@processSummary')->name('payroll.processSummary');
 
 
 /*

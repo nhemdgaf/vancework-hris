@@ -187,17 +187,106 @@ class DtrController extends Controller
         // $request->fields = array_flip($request->fields);
         foreach ($csv_data as $row) {
             // Create new Dtr model
-            $dtr = new Dtr();
-            foreach (config('app.db_fields') as $index => $field) {
-                $dtr->$field = $row[$index];
+            if (!(Dtr::where('emp_num', $row[0])
+                        ->where('cutoff_date', $cutoff_date)
+                        ->first()))
+            {
+                $dtr = new Dtr();
+                foreach (config('app.db_fields') as $index => $field) {
+                    $dtr->$field = $row[$index];
+                }
+                $dtr->cutoff_date = $cutoff_date;
+                // Save to database
+                $dtr->save();
             }
-            $dtr->cutoff_date = $cutoff_date;
-            // Save to database
-            $dtr->save();
         }
 
+        $dtr_summary = DB::table('dtrs')
+                        // ->join('employees', 'dtrs.emp_num', 'employees.emp_num')
+                        ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
+                        ->select(DB::raw('count(dtrs.emp_num) as head_count'),
+                                DB::raw('sum(dtrs.reg_hours) as reg_hours'),
+                                DB::raw('sum(dtrs.late_mins) as late'),
+                                DB::raw('sum(dtrs.reg_ot) as reg_ot'),
+                                DB::raw('sum(dtrs.rest) as rest'),
+                                DB::raw('sum(dtrs.rest_ot) as rest_ot'),
+                                DB::raw('sum(dtrs.legal_hol) as hol'),
+                                DB::raw('sum(dtrs.legal_hol_ot) as hol_ot'),
+                                DB::raw('sum(dtrs.rest_legal_hol) as rest_hol'),
+                                DB::raw('sum(dtrs.rest_legal_hol_ot) as rest_hol_ot'),
+                                DB::raw('sum(dtrs.spl_hol) as spl_hol'),
+                                DB::raw('sum(dtrs.spl_hol_ot) as spl_hol_ot'),
+                                DB::raw('sum(dtrs.rest_spl_hol) as rest_spl'),
+                                DB::raw('sum(dtrs.rest_spl_hol_ot) as rest_spl_ot'),
+                                DB::raw('sum(dtrs.nd) as nd'),
+                                DB::raw('sum(dtrs.nd_ot) as nd_ot'),
+                                DB::raw('sum(dtrs.nd_rest) as nd_rest'),
+                                DB::raw('sum(dtrs.nd_rest_ot) as nd_rest_ot'),
+                                DB::raw('sum(dtrs.nd_legal_hol) as nd_hol'),
+                                DB::raw('sum(dtrs.nd_legal_hol_ot) as nd_hol_ot'),
+                                DB::raw('sum(dtrs.nd_rest_legal_hol) as nd_rest_hol'),
+                                DB::raw('sum(dtrs.nd_rest_legal_hol_ot) as nd_rest_hol_ot'),
+                                DB::raw('sum(dtrs.nd_spl_hol) as nd_spl_hol'),
+                                DB::raw('sum(dtrs.nd_spl_hol_ot) as nd_spl_hol_ot'),
+                                DB::raw('sum(dtrs.nd_rest_spl_hol) as nd_rest_spl'),
+                                DB::raw('sum(dtrs.nd_rest_spl_hol_ot) as nd_rest_spl_ot'),
+                                'employee_profiles.store_assignment' , 'dtrs.cutoff_date')
+                        ->where('dtrs.cutoff_date', $cutoff_date)
+                        ->groupBy('employee_profiles.store_assignment')
+                        ->get();
+
+        $grand_total = DB::table('dtrs')
+                    // ->join('employees', 'dtrs.emp_num', 'employees.emp_num')
+                    ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
+                    ->select(DB::raw('count(dtrs.emp_num) as head_count'),
+                            DB::raw('sum(dtrs.reg_hours) as reg_hours'),
+                            DB::raw('sum(dtrs.late_mins) as late'),
+                            DB::raw('sum(dtrs.reg_ot) as reg_ot'),
+                            DB::raw('sum(dtrs.rest) as rest'),
+                            DB::raw('sum(dtrs.rest_ot) as rest_ot'),
+                            DB::raw('sum(dtrs.legal_hol) as hol'),
+                            DB::raw('sum(dtrs.legal_hol_ot) as hol_ot'),
+                            DB::raw('sum(dtrs.rest_legal_hol) as rest_hol'),
+                            DB::raw('sum(dtrs.rest_legal_hol_ot) as rest_hol_ot'),
+                            DB::raw('sum(dtrs.spl_hol) as spl_hol'),
+                            DB::raw('sum(dtrs.spl_hol_ot) as spl_hol_ot'),
+                            DB::raw('sum(dtrs.rest_spl_hol) as rest_spl'),
+                            DB::raw('sum(dtrs.rest_spl_hol_ot) as rest_spl_ot'),
+                            DB::raw('sum(dtrs.nd) as nd'),
+                            DB::raw('sum(dtrs.nd_ot) as nd_ot'),
+                            DB::raw('sum(dtrs.nd_rest) as nd_rest'),
+                            DB::raw('sum(dtrs.nd_rest_ot) as nd_rest_ot'),
+                            DB::raw('sum(dtrs.nd_legal_hol) as nd_hol'),
+                            DB::raw('sum(dtrs.nd_legal_hol_ot) as nd_hol_ot'),
+                            DB::raw('sum(dtrs.nd_rest_legal_hol) as nd_rest_hol'),
+                            DB::raw('sum(dtrs.nd_rest_legal_hol_ot) as nd_rest_hol_ot'),
+                            DB::raw('sum(dtrs.nd_spl_hol) as nd_spl_hol'),
+                            DB::raw('sum(dtrs.nd_spl_hol_ot) as nd_spl_hol_ot'),
+                            DB::raw('sum(dtrs.nd_rest_spl_hol) as nd_rest_spl'),
+                            DB::raw('sum(dtrs.nd_rest_spl_hol_ot) as nd_rest_spl_ot'),
+                            'employee_profiles.store_assignment' , 'dtrs.cutoff_date')
+                    ->where('dtrs.cutoff_date', $cutoff_date)
+                    ->get();
+        // dd($dtr_summary);
+        // dd($dtr_summary[0]->store_assignment);
+        // dd($grand_total);
+
         toastr()->success('Cutoff-period saved!');
-        return view('admin.payroll.index');
+        return view('admin.dtr.dtr_summary', compact('dtr_summary', 'cutoff_date', 'grand_total'));
+    }
+
+    public function deleteDtrs(Request $request){
+        $data = $request->validate([
+            'cutoff_date' => 'date|required'
+        ]);
+
+        $cutoff_date = $data['cutoff_date'];
+
+        $delete_dtrs = DB::table('dtrs')
+                        ->where('cutoff_date', $cutoff_date)
+                        ->delete();
+
+        return response()->json(array('cutoff_date'=> $data['cutoff_date']), 200);
     }
 
     /**

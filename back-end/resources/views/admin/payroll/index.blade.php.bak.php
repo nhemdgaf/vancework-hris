@@ -43,6 +43,48 @@
 
             </form>
         </div>
+
+
+        @if(isset($stores))
+            <div class="col-xl-12 mt-1">
+                <table id="dtr_table" class="table">
+                    <tbody>
+                        <tr>
+                            <td>Concerns</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="col-xl-12 mt-1">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">List of Stores</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($stores as $store)
+                        <tr>
+                            <td>
+                                <div class="checkbox">
+                                    <label><input type="checkbox" value=""> {{ $store->store_assignment }}</label>
+                                </div>
+                            </td>
+                        </tr>
+
+                        @endforeach
+                        {{-- <div class="checkbox disabled">
+                            <label><input type="checkbox" value="" disabled> SM STA.ROSA
+                                <img src="https://img.icons8.com/color/18/000000/info--v1.png" data-original-title="This store has been posted." data-placement="right" data-toggle="tooltip"></img>
+                            </label>
+                        </div> --}}
+                    </tbody>
+                </table>
+                <form>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -96,10 +138,6 @@
     $("#cutoff_date").change(function(event){
         event.preventDefault();
 
-        $("#stores form").empty();
-
-        $("#stores form").append('@csrf');
-
         let $this = $(this);
         let selected_date = $this.val();
 
@@ -123,7 +161,7 @@
           type:"POST",
           data:{
             cutoff_date: selected_date,
-            _token: '{{ csrf_token() }}'
+            _token: '{{csrf_token()}}'
           },
           success:function(response){
             // console.log(response);
@@ -146,7 +184,7 @@
                                 "<td>" +
                                     "<div class='checkbox'>" +
                                         "<label>" +
-                                            "<input type='checkbox' name='stores[]' value='" + store +"'> " + store +
+                                            "<input type='checkbox' value='" + store +"'> " + store +
                                         "</label>" +
                                     "</div>" +
                                 "</td>";
@@ -155,12 +193,11 @@
                     $("#stores-table tbody").append(tr_str);
                 }
 
-                var process_str = "<input type='hidden' name='cutoff_date' value='" + response['cutoff_date'] + "''>" +
-                "<button class='process_summary' id='process_summary' name='process_summary' value='submit'>Process Summary</button>";
+                var process_str = "<button class='process_summary' id='process_summary' name='process_summary' value='submit'>Process Summary</button>";
 
                 $("#stores-table tbody").append(process_str);
             }
-          }
+          },
          });
     });
 </script>

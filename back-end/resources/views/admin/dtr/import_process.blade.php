@@ -15,16 +15,22 @@
             <h5>Cut-Off Period</h5>
         </div>
 
-
-        {{ $csv_file_id }}
         <div class="col-xl-12">
+
             <form class="form-horizontal" method="POST" action="{{ route('dtr.saveCutOff') }}">
                 @csrf
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </div>
+                @endif
                 <input type="hidden" name="csv_data_file_id" value="{{ (isset($csv_file_id)) ? $csv_file_id : '' }}" />
 
                 <div class="form-group d-flex justify-content-start align-items-start col-xl-6">
                     <label class="date-label" for="cutoff_date">Please select cut-off period:</label>
-                    <input class="form-control" type="date" id="cutoff_date" name="cutoff_date">
+                    <input class="form-control" type="date" id="cutoff_date" name="cutoff_date" required>
                 </div>
 
                 <div class="form-group d-flex justify-content-start align-items-start col-xl-6">
@@ -33,6 +39,12 @@
                 {{-- <button class="btn ml-3 btn-outline-warning" type="button" data-toggle="modal" data-target="#ConfirmPosting">Post</button> --}}
             </form>
         </div>
+
+        @if(isset($dtr_summary))
+            <div class="col-xl-12">
+
+            </div>
+        @endif
 
     </div>
 </div>
