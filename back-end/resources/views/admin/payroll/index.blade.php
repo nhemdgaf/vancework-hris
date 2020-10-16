@@ -156,7 +156,7 @@
                 }
 
                 var process_str = "<input type='hidden' name='cutoff_date' value='" + response['cutoff_date'] + "''>" +
-                "<button class='process_summary' id='process_summary' name='process_summary' value='submit'>Process Summary</button>";
+                "<button class='process_summary' id='process_summary' name='process_summary' value='submit'>Process Payroll</button>";
 
                 $("#stores-table tbody").append(process_str);
             }

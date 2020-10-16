@@ -39,13 +39,6 @@
                 {{-- <button class="btn ml-3 btn-outline-warning" type="button" data-toggle="modal" data-target="#ConfirmPosting">Post</button> --}}
             </form>
         </div>
-
-        @if(isset($dtr_summary))
-            <div class="col-xl-12">
-
-            </div>
-        @endif
-
     </div>
 </div>
 @endsection

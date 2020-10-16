@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Dtr;
 use App\Employee;
+use App\EmployeePay;
 use App\PostedPeriod;
 use Illuminate\Support\Facades\DB;
 
@@ -21,6 +22,7 @@ class PayrollController extends Controller
                         ->groupBy('cutoff_date')
                         ->get();
         // dd($cut_offs);
+
         if(count($cut_offs) > 0){
             return view('admin.payroll.index', compact('cut_offs'));
         }
@@ -53,22 +55,272 @@ class PayrollController extends Controller
     }
 
     public function processSummary(Request $request){
+        // dd($request);
+
         $data = $request->validate([
             'stores'        => 'required',
             'cutoff_date'   => 'required',
         ]);
 
-        dd($data);
+        $cutoff_date = $data['cutoff_date'];
+        $stores = $data['stores'];
 
-        // $summary = DB::table('dtrs')
-        //             ->where('cutoff_date', $data['cutoff_date'])
-        //             ->get();
+        $employees = DB::table('dtrs')
+                    ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
+                    ->where('cutoff_date', $cutoff_date)
+                    ->whereIn('employee_profiles.store_assignment', $stores)
+                    ->get();
 
-        // $stores = DB::table('employees')
-        //             ->join('employee_profiles', 'employees.emp_num', 'employee_profiles.emp_num')
-        //             ->whereIn('employees.emp_num', $dtrs_emp_num)
-        //             ->select('employees.emp_num', 'employee_profiles.store_assignment')
-        //             ->groupBy('employee_profiles.store_assignment')
-        //             ->get();
+        // dd($employees);
+
+        // Employees who have wrong basic daily rate
+        $wrongRate = [];
+        foreach($employees as $employee){
+            if($employee->basic_pay > 537)
+                $wrongRate[] = $employee->emp_num;
+        }
+        // dd($wrongRate);
+
+        // Employees pay
+        $empPay = $this->computePay($employees);
+        // dd($empPay);
+
+        // Employees net pay
+        $nets = array_column($empPay, 'net_pay', 'emp_num');
+        // dd($nets);
+
+        // Employees who have net pay that is greater than 10,000
+        $moreThanTen = [];
+        foreach($nets as $index => $net){
+            if($net > 10000)
+                $moreThanTen[] = $index;
+        }
+        // dd($moreThanTen);
+
+        // Employees who have no sss contrib
+        $emptySSS = $this->checkEmptyContribution($empPay, 'sss');
+        // dd($emptySSS);
+
+        // Employees who have no philhealth contrib
+        $emptyPhilhealth = $this->checkEmptyContribution($empPay, 'philhealth');
+        // dd($emptyPhilhealth);
+
+        // Employees who have no pagibig contrib
+        $emptyPagibig = $this->checkEmptyContribution($empPay, 'pagibig');
+        // dd($emptyPagibig);
+
+        // $wrongRate = [2323,131];
+        // $moreThanTen = [];
+        // $emptySSS = [154,642];
+        // $emptyPhilhealth = [4541];
+        // $emptyPagibig = [33232,13];
+
+        if(!(count($wrongRate))  > 0 AND !(count($moreThanTen))  > 0
+            AND !(count($emptySSS)) > 0 AND !(count($emptyPhilhealth)) > 0
+            AND !(count($emptyPagibig)) > 0)
+        {
+            foreach($empPay as $pay){
+                $employee = EmployeePay::where('emp_num', $pay['emp_num'])
+                                        ->where('cutoff_date', $pay['cutoff_date'])
+                                        ->get();
+                // dd($employee);
+                if(!(count($employee) > 0)){
+                    $employee_pay = EmployeePay::create($pay);
+                }
+                // $special = EmployeePay::create($pay)
+            }
+            // dd($cutoff_date);
+
+            return view('admin.payroll.payroll_summary', compact('empPay', 'cutoff_date', 'stores'));
+        }
+
+        // dd('hello');
+        return view('admin.payroll.payroll_summary', compact('empPay', 'cutoff_date', 'stores', 'emptySSS', 'emptyPhilhealth', 'emptyPagibig', 'wrongRate', 'moreThanTen'));
     }
+
+    public function checkSSS($gross){
+        $range_min = 19750;
+        $ee = 800;
+        while(!($gross >= $range_min)){
+            $range_min = $range_min - 500;
+            $ee = $ee - 20;
+        }
+
+        return $ee;
+    }
+
+    public function checkPhilHealth($basic){
+        $year = date('Y');
+        // $year = 2024;
+        if($year == 2020){
+            if($basic > 60000)
+                $contribution = 1800/2;
+
+            if($basic >= 10000 AND $basic < 60000)
+                $contribution = ($basic * .03) / 2;
+
+            if($basic <= 10000)
+                $contribution = 300/2;
+        }
+
+        if($year == 2021){
+            if($basic > 70000)
+                $contribution = 2450/2;
+
+            if($basic >= 10000 AND $basic < 70000)
+                $contribution = ($basic * .035) / 2;
+
+            if($basic <= 10000)
+                $contribution = 350/2;
+        }
+
+        if($year == 2022){
+            if($basic > 80000)
+                $contribution = 3200/2;
+
+            if($basic >= 10000 AND $basic < 80000)
+                $contribution = ($basic * .04) / 2;
+
+            if($basic <= 10000)
+                $contribution = 400/2;
+        }
+
+        if($year == 2023){
+            if($basic > 90000)
+                $contribution = 4050/2;
+
+            if($basic >= 10000 AND $basic < 90000)
+                $contribution = ($basic * .045) / 2;
+
+            if($basic <= 10000)
+                $contribution = 450/2;
+        }
+
+        if($year > 2023){
+            if($basic > 100000)
+                $contribution = 5000/2;
+
+            if($basic >= 10000 AND $basic < 100000)
+                $contribution = ($basic * .05) / 2;
+
+            if($basic <= 10000)
+                $contribution = 500/2;
+        }
+
+        return $contribution;
+    }
+
+    public function checkPagIbig($basic){
+        // if($basic == )
+        if($basic <= 1500)
+            return $basic * .01;
+
+        if($basic > 1500)
+            $contribution = $basic * .02;
+            if($contribution > 100)
+                return 100;
+
+            return $contribution;
+    }
+
+    public function computePay($employees){
+        $empPay = [];
+        foreach($employees as $index => $employee){
+            $basic = $employee->basic_pay;
+
+            $rate = $basic/8;
+            $reg = $employee->reg_hours * $rate;
+            $late = $employee->late_mins/60 * $rate;
+            $reg_ot = (($basic * 1.25)/8) * $employee->reg_ot;
+            $nd = (($basic*.1)/8) * $employee->nd;
+            $nd_ot = (($basic*.125)/8) * $employee->nd_ot;
+            $rest = (($basic * 1.3)/8) * $employee->rest;
+            $rest_ot = (($basic * 1.69)/8) * $employee->rest_ot;
+            $nd_rest = (($basic * .13)/8) * $employee->nd_rest;
+            $nd_rest_ot = (($basic * .169)/8) * $employee->nd_rest_ot;
+            $legal_hol = (($basic * 2)/8) * $employee->legal_hol;
+            $legal_hol_ot = (($basic * 2.6)/8) * $employee->legal_hol_ot;
+            $nd_legal_hol = (($basic * .2)/8) * $employee->nd_legal_hol;
+            $nd_legal_hol_ot = (($basic * .26)/8) * $employee->nd_legal_hol_ot;
+            $rest_legal_hol = (($basic * 2.6)/8) * $employee->rest_legal_hol;
+            $rest_legal_hol_ot = (($basic * 3.38)/8) * $employee->rest_legal_hol_ot;
+            $nd_rest_legal_hol = (($basic * .26)/8) * $employee->nd_rest_legal_hol;
+            $nd_rest_legal_hol_ot = (($basic * .338)/8) * $employee->nd_rest_legal_hol_ot;
+            $spl_hol = (($basic * 1.3)/8) * $employee->spl_hol;
+            $spl_hol_ot = (($basic * 1.69)/8) * $employee->spl_hol_ot;
+            $nd_spl_hol = (($basic * .13)/8) * $employee->nd_spl_hol;
+            $nd_spl_hol_ot = (($basic * .169)/8) * $employee->nd_spl_hol_ot;
+            $rest_spl_hol = (($basic * 1.5)/8) * $employee->rest_spl_hol;
+            $rest_spl_hol_ot = (($basic * 1.95)/8) * $employee->rest_spl_hol_ot;
+            $nd_rest_spl_hol = (($basic * .15)/8) * $employee->nd_rest_spl_hol;
+            $nd_rest_spl_hol_ot = (($basic * .195)/8) * $employee->nd_rest_spl_hol_ot;
+
+            $gross_pay = ($reg + $reg_ot + $nd + $nd_ot + $rest + $rest_ot + $nd_rest + $nd_rest_ot +
+                        $legal_hol + $legal_hol_ot + $nd_legal_hol + $nd_legal_hol_ot + $rest_legal_hol +
+                        $rest_legal_hol_ot + $nd_rest_legal_hol + $nd_rest_legal_hol_ot + $spl_hol +
+                        $spl_hol_ot + $nd_spl_hol + $nd_spl_hol_ot + $rest_spl_hol + $rest_spl_hol_ot +
+                        $nd_rest_spl_hol + $nd_rest_spl_hol_ot) - $late;
+
+            $basic_pay = $reg - $late;
+
+            // $gross_pay = 2249; // For testing checkSSS function
+            $sss = $this->checkSSS($gross_pay);
+
+            // $basic_pay = 1200000.01;
+            $philhealth = $this->checkPhilHealth($basic_pay);
+
+            // $basic_pay = 4999;
+            $pagibig = $this->checkPagIbig($basic_pay);
+
+            $net_pay = $gross_pay - ($sss + $philhealth + $pagibig);
+
+            $empPay[$index]['emp_num'] = $employee->emp_num;
+            $empPay[$index]['reg_hours'] = $reg;
+            $empPay[$index]['late_mins'] = $late;
+            $empPay[$index]['reg_ot'] = $reg_ot;
+            $empPay[$index]['nd'] = $nd;
+            $empPay[$index]['nd_ot'] = $nd_ot;
+            $empPay[$index]['rest'] = $rest;
+            $empPay[$index]['rest_ot'] = $rest_ot;
+            $empPay[$index]['nd_rest'] = $nd_rest;
+            $empPay[$index]['nd_rest_ot'] = $nd_rest_ot;
+            $empPay[$index]['legal_hol'] = $legal_hol;
+            $empPay[$index]['legal_hol_ot'] = $legal_hol_ot;
+            $empPay[$index]['nd_legal_hol'] = $nd_legal_hol;
+            $empPay[$index]['nd_legal_hol_ot'] = $nd_legal_hol_ot;
+            $empPay[$index]['rest_legal_hol'] = $rest_legal_hol;
+            $empPay[$index]['rest_legal_hol_ot'] = $rest_legal_hol_ot;
+            $empPay[$index]['nd_rest_legal_hol'] = $nd_rest_legal_hol;
+            $empPay[$index]['nd_rest_legal_hol_ot'] = $nd_rest_legal_hol_ot;
+            $empPay[$index]['spl_hol'] = $spl_hol;
+            $empPay[$index]['spl_hol_ot'] = $spl_hol_ot;
+            $empPay[$index]['nd_spl_hol'] = $nd_spl_hol;
+            $empPay[$index]['nd_spl_hol_ot'] = $nd_spl_hol_ot;
+            $empPay[$index]['rest_spl_hol'] = $rest_spl_hol;
+            $empPay[$index]['rest_spl_hol_ot'] = $rest_spl_hol_ot;
+            $empPay[$index]['nd_rest_spl_hol'] = $nd_rest_spl_hol;
+            $empPay[$index]['nd_rest_spl_hol_ot'] = $nd_rest_spl_hol_ot;
+            $empPay[$index]['basic_pay'] = $basic_pay;
+            $empPay[$index]['gross_pay'] = $gross_pay;
+            $empPay[$index]['sss'] = $sss;
+            $empPay[$index]['philhealth'] = $philhealth;
+            $empPay[$index]['pagibig'] = $pagibig;
+            $empPay[$index]['net_pay'] = $net_pay;
+            $empPay[$index]['cutoff_date'] = $employee->cutoff_date;
+        }
+
+        // dd($empPay);
+        return $empPay;
+    }
+
+    public function checkEmptyContribution($arr, $column){
+        $zeroContributions = [];
+        $contributions = array_column($arr, $column, 'emp_num');
+        foreach($contributions as $key => $contribution){
+            if(!($contribution > 0))
+                $zeroContributions[] = $key;
+        }
+        return $zeroContributions;
+    }
+
 }

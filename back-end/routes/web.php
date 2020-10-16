@@ -44,6 +44,7 @@ Route::post('/dtr-deleteDtrs', 'DtrController@deleteDtrs')->name('dtr.deleteDtrs
 Route::get('/payroll', 'PayrollController@index')->name('payroll.admin');
 Route::post('/fetch-stores', 'PayrollController@showStores')->name('payroll.showStores');
 Route::post('/process-summary', 'PayrollController@processSummary')->name('payroll.processSummary');
+// Route::post('/payroll-initial-summary', 'PayrollController@'
 
 
 /*

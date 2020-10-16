@@ -122,7 +122,7 @@
                 </button>
             </form>
         </div>
-        @else
+        {{-- @else
         <div class="col-12 mt-5">
             <table id="dtr_table" class="table">
                 <thead>
@@ -136,7 +136,7 @@
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </div> --}}
         @endif
     </div>
 </div>
