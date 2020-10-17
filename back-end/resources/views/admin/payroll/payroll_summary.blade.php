@@ -214,10 +214,10 @@
         }
     });
 
-    $('#btn-Continue').click(function(e){
+    $('#btn-Validate').click(function(e){
         e.preventDefault();
         alert('Data saved successfully!');
-        window.location.href = "{{ route('payroll.admin') }}";
+        window.location.href = "{{ route('payroll.dtrPayrollSummary') }}";
     });
 </script>
 @endsection

@@ -1,0 +1,7 @@
+emp_num,last_name,first_name,middle_name,reg_hours,late(mins),reg_ot,rest,rest_ot,legal_hol,legal_hol_ot,rest_legal_hol,rest_legal_hol_ot,spl_hol,spl_hol_ot,rest_spl_hol,rest_spl_hol_ot,nd,nd_ot,nd_rest,nd_rest_ot,nd_legal_hol,nd_legal_hol_ot,nd_rest_legal_hol,nd_rest_legal_hol_ot,nd_spl_hol,nd_spl_hol_ot,nd_rest_spl_hol,nd_rest_spl_hol_ot
+3158,Schoen,Jeremie,,26,82,26,28,94,100,63,1,49,99,42,92,48,61,62,98,92,19,69,29,63,50,19,46,7
+3987,Tillman,Vicenta,,45,4,45,4,84,71,0,1,2,3,4,5,6,9,7,7,2,4,4,5,1,6,4,4,4
+6981,Nikolaus,Nelda,,45,2,4,4,2,4,0,1,2,2,4,5,2,9,2,7,4,2,7,5,1,4,4,2,4
+9311,Hegmann,Braulio,,45,2,45,64,84,71,4,1,2,3,4,5,6,4,7,7,2,4,4,4,4,4,4,2,3
+7842,Hayes,Drew,Smitham,1,4,6,7,2,71,34,8,7,6,4,8,6,2,4,7,4,2,4,4,7,6,7,4,7
+2820,Wiegand,Michael,,45,21,45,64,84,71,0,1,4,3,4,5,6,4,7,4,2,4,7,5,1,4,4,2,3

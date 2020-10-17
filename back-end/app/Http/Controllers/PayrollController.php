@@ -6,15 +6,15 @@ use Illuminate\Http\Request;
 use App\Dtr;
 use App\Employee;
 use App\EmployeePay;
-use App\PostedPeriod;
+use App\PostedBatch;
+use Illuminate\Contracts\Cache\Store;
 use Illuminate\Support\Facades\DB;
 
 
 class PayrollController extends Controller
 {
-    public function index()
-    {
-        $cutoff_date = PostedPeriod::select('cutoff_date')->get();
+    public function index(){
+        $cutoff_date = PostedBatch::select('cutoff_date')->get();
         // dd($cutoff_date);
 
         $cut_offs = DB::table('dtrs')
@@ -30,7 +30,7 @@ class PayrollController extends Controller
         return view('admin.payroll.index');
     }
 
-    public function showStores(Request $request){
+    public function fetchStores(Request $request){
         $data = $request->all();
         // dd($data);
 
@@ -51,7 +51,7 @@ class PayrollController extends Controller
                     ->get();
         // dd($stores);
 
-        return response()->json(array('stores'=> $stores, 'cutoff_date'=> $data['cutoff_date']), 200);
+        return response()->json(array('stores' => $stores, 'cutoff_date'=> $data['cutoff_date']), 200);
     }
 
     public function processSummary(Request $request){
@@ -115,9 +115,10 @@ class PayrollController extends Controller
         // $emptyPhilhealth = [4541];
         // $emptyPagibig = [33232,13];
 
-        if(!(count($wrongRate))  > 0 AND !(count($moreThanTen))  > 0
-            AND !(count($emptySSS)) > 0 AND !(count($emptyPhilhealth)) > 0
-            AND !(count($emptyPagibig)) > 0)
+        if(!(count($wrongRate)  > 0)
+            // AND !(count($moreThanTen) > 0)
+            AND !(count($emptySSS) > 0) AND !(count($emptyPhilhealth) > 0)
+            AND !(count($emptyPagibig) > 0))
         {
             foreach($empPay as $pay){
                 $employee = EmployeePay::where('emp_num', $pay['emp_num'])
@@ -136,6 +137,143 @@ class PayrollController extends Controller
 
         // dd('hello');
         return view('admin.payroll.payroll_summary', compact('empPay', 'cutoff_date', 'stores', 'emptySSS', 'emptyPhilhealth', 'emptyPagibig', 'wrongRate', 'moreThanTen'));
+    }
+
+    public function dtrPayrollSummary(){
+        $payroll_summary = DB::table('employee_pays')
+                                ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
+                                ->select('employee_profiles.store_assignment',
+                                        DB::raw('count(employee_pays.emp_num) as headcount'),
+                                        DB::raw('sum(employee_pays.basic_pay) as basic_pay'),
+                                        'employee_pays.cutoff_date')
+                                ->groupBy('employee_profiles.store_assignment')
+                                ->get()
+                                ->toArray();
+        // dd($payroll_summary);
+
+        $stores = array_column($payroll_summary, 'store_assignment');
+        // dd($stores);
+
+        $payroll_emp = DB::table('employee_pays')
+                            ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
+                            ->select('employee_pays.emp_num', 'employee_profiles.store_assignment')
+                            ->whereIn('employee_profiles.store_assignment', $stores)
+                            ->get()
+                            ->toArray();
+        // dd($pay_emp_num);
+
+        $pay_emp_num = array_column($payroll_emp, 'emp_num');
+        // dd($pay_emp_num);
+
+        $cutoff_date = $payroll_summary[0]->cutoff_date;
+        // dd($cutoff_date);
+
+        $dtr_employees = DB::table('dtrs')
+                            ->select('employee_profiles.store_assignment',
+                                    DB::raw('count(dtrs.emp_num) as headcount'),
+                                    DB::raw('sum(dtrs.reg_hours) as reg_hours'),
+                                    DB::raw('sum(dtrs.late_mins) as late_mins'),
+                                    'employee_profiles.basic_pay')
+                            ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
+                            ->whereIn('dtrs.emp_num', $pay_emp_num)
+                            ->where('dtrs.cutoff_date', $cutoff_date)
+                            ->groupBy('employee_profiles.store_assignment')
+                            ->get()
+                            ->toArray();
+        // dd($dtr_employees);
+
+        $dtr_summary = [];
+        foreach($dtr_employees as $index => $dtr){
+            // dd($dtr);
+            $dtr_summary[$index]['store_assignment'] = $dtr->store_assignment;
+            $dtr_summary[$index]['headcount'] = $dtr->headcount;
+            $rate = $dtr->basic_pay/8;
+            $dtr_summary[$index]['basic_pay'] = round(($rate * $dtr->reg_hours), 2) - round(($rate * ($dtr->late_mins / 60)), 2);
+        }
+        // dd($dtr_summary);
+
+        $batch = $this->generateBatchNumber();
+
+        return view('admin.payroll.dtr_payroll_summary', compact('payroll_summary', 'dtr_summary', 'stores', 'cutoff_date', 'batch'));
+    }
+
+    public function generateBatchNumber(){
+        $suffix = '2020';
+        $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $small_letters = 'abcdefghijklmnopqrstuvwxyz';
+        $number = rand(10000,99999);
+
+        $string = $letters[rand(0,25)] . $small_letters[rand(0,25)] . $letters[rand(0,25)] . $small_letters[rand(0,25)];
+
+        return $string . $number . $suffix;
+    }
+
+    public function showProcessedInfo(Request $request){
+        $batch_number = $request->batch_number;
+
+        // dd($batch_number);
+
+        $cut_offs = DB::table('employee_pays')
+                    ->groupBy('cutoff_date')
+                    ->get()
+                    ->toArray();
+        // dd($cut_offs);
+
+        $emp_pay = DB::table('employee_pays')
+                    ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
+                    ->get();
+        // dd($emp_pay);
+
+        return view('admin.payroll.processed_info', compact('cut_offs', 'batch_number'));
+    }
+
+    public function fetchProcessedStores(Request $request){
+        $data = $request->all();
+        // dd($data);
+
+        // $dtrs = DB::table('dtrs')
+        //             ->where('cutoff_date', $data['cutoff_date'])
+        //             ->get()
+        //             ->toArray();
+        // dd($dtrs);
+
+        // $dtrs_emp_num = array_column($dtrs, 'emp_num');
+        // dd($dtrs_emp_num);
+
+        $stores = DB::table('employee_pays')
+                    ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
+                    ->select('employee_profiles.store_assignment')
+                    ->groupBy('employee_profiles.store_assignment')
+                    ->get();
+
+        // $stores = DB::table('employees')
+        //             ->join('employee_profiles', 'employees.emp_num', 'employee_profiles.emp_num')
+        //             ->whereIn('employees.emp_num', $dtrs_emp_num)
+        //             ->select('employees.emp_num', 'employee_profiles.store_assignment')
+        //             ->groupBy('employee_profiles.store_assignment')
+        //             ->get();
+        // dd($stores);
+
+        return response()->json(array('stores'=> $stores, 'data' => $data), 200);
+    }
+
+    public function postBatch(Request $request){
+        // dd($request);
+        $data = $request->all();
+        // dd($data);
+        $stores = $data['stores'];
+        $store = implode("; ", $stores);
+        // dd($store);
+        $batch = new PostedBatch();
+        $batch->stores = $store;
+        $batch->cutoff_date = $data['cutoff_date'];
+        // dd($batch->cutoff_date);
+        $batch->batch_number = $data['batch_number'];
+        // $batch->stores = $store
+        $batch->save();
+
+        toastr()->success('Batch posted successfully!');
+        return redirect('/payroll');
     }
 
     public function checkSSS($gross){
@@ -276,7 +414,7 @@ class PayrollController extends Controller
 
             $empPay[$index]['emp_num'] = $employee->emp_num;
             $empPay[$index]['reg_hours'] = $reg;
-            $empPay[$index]['late_mins'] = $late;
+            $empPay[$index]['late'] = $late;
             $empPay[$index]['reg_ot'] = $reg_ot;
             $empPay[$index]['nd'] = $nd;
             $empPay[$index]['nd_ot'] = $nd_ot;

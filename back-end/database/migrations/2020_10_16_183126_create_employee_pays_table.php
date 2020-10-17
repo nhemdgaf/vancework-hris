@@ -18,7 +18,7 @@ class CreateEmployeePaysTable extends Migration
             // $table->$table->string('emp_num');
             $table->string('emp_num');
             $table->decimal('reg_hours', 8, 2);
-            $table->decimal('late_mins', 8, 2);
+            $table->decimal('late', 8, 2);
             $table->decimal('reg_ot', 8, 2);
             $table->decimal('rest', 8, 2);
             $table->decimal('rest_ot', 8, 2);

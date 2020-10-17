@@ -1,0 +1,4 @@
+emp_num	last_name	first_name	middle_name	reg_hours	late(mins)	reg_ot	rest	rest_ot	legal_hol	legal_hol_ot	rest_legal_hol	rest_legal_hol_ot	spl_hol	spl_hol_ot	rest_spl_hol	rest_spl_hol_ot	nd	nd_ot	nd_rest	nd_rest_ot	nd_legal_hol	nd_legal_hol_ot	nd_rest_legal_hol	nd_rest_legal_hol_ot	nd_spl_hol	nd_spl_hol_ot	nd_rest_spl_hol	nd_rest_spl_hol_ot	
+3158	Schoen	Jeremie		8	8	8	8	8	1	1	3	4	6	46	64	5	8	47	5	52	1	5	5	54	4	123	3	3	3
+3987	Tillman	Vicenta		8	8	8	8	8	1	1	3	4	6	46	64	5	8	47	5	52	1	5	5	54	4	123	3	3	3
+6981	Nikolaus	Nelda		8	8	8	8	8	1	1	3	4	6	46	64	5	8	47	5	52	1	5	5	54	4	123	3	3	3

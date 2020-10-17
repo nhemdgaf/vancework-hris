@@ -16,23 +16,6 @@
             <h6>Period: {{ date('m/d/Y', strtotime($cutoff_date)) }} - {{ date('m/d/Y', strtotime($cutoff_date. '+15 days')) }}</h6>
         </div>
 
-        {{-- <div class="col-xl-12">
-            <form class="form-horizontal" method="POST" action="{{ route('dtr.saveCutOff') }}">
-                @csrf
-                <input type="hidden" name="csv_data_file_id" value="{{ (isset($csv_file_id)) ? $csv_file_id : '' }}" />
-
-                <div class="form-group d-flex justify-content-start align-items-start col-xl-6">
-                    <label class="date-label" for="cutoff_date">Please select cut-off period:</label>
-                    <input class="form-control" type="date" id="cutoff_date" name="cutoff_date">
-                </div>
-
-                <div class="form-group d-flex justify-content-start align-items-start col-xl-6">
-                    <button class="btn btn-outline-warning" type="submit">Save Cut-Off</button>
-                </div>
-                {{-- <button class="btn ml-3 btn-outline-warning" type="button" data-toggle="modal" data-target="#ConfirmPosting">Post</button> --}}
-            {{-- </form>
-        </div> --}}
-
         @if(isset($dtr_summary))
             <div class="col-xl-12 d-flex justify-content-start align-items-start table-responsive">
                 <form id="dtr-summary">
