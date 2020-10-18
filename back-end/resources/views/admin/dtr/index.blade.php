@@ -28,9 +28,9 @@
                         <!-- <label class="custom-file-label" for="customfile">Choose file</label> -->
                         <label for="csv_file" class="custom-file-label control-label text-truncate" id="csv_file_label">Choose file</label>
                         @if ($errors->has('csv_file'))
-                        <span class="help-block">
-                            <strong>{{ $errors->first('csv_file') }}</strong>
-                        </span>
+                            <span class="help-block">
+                                <strong>{{ $errors->first('csv_file') }}</strong>
+                            </span>
                         @endif
                     </div>
 

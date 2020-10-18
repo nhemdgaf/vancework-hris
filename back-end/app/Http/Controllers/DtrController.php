@@ -27,21 +27,19 @@ class DtrController extends Controller
     // Parse CSV Import and send back data to dtr/index.blade.php
     public function parseImport(CsvImportRequest $request)
     {
-        // dd($request);
+
         $path = $request->file('csv_file')->getPathName();
         $data = Excel::toArray(new CsvImportRequest, request()->file('csv_file'))[0];
-
-        // if (array_column($data, 1) === [])
-        // dd($request);
-        if (count($data) > 0) {
-            $csv_data = array_slice($data, 1);
+        $csv_data = array_slice($data, 1);
+        if (!(array_column($csv_data, 0) === [])) {
 
             $csv_data_file = CsvData::create([
                 'csv_filename' => $request->file('csv_file')->getClientOriginalName(),
                 'csv_data' => json_encode($data)
             ]);
         } else {
-            return redirect()->back();
+            $errors = 'Empty csv file';
+            return redirect()->back() ;
         }
         return view('admin.dtr.index', compact('csv_data', 'csv_data_file'));
     }
