@@ -73,15 +73,63 @@ class PayrollController extends Controller
 
                 // dd($cutoff_date);
 
-                if(empty($not_processed_stores)){
+                if(empty($not_processed_store)){
                     if(in_array($cutoff_date, $cut_offs)){
                         $index = array_search($cutoff_date, $cut_offs);
                         unset($cut_offs[$index]);
                     }
                 }
+
+                // if(!(empty($not_processed_stores))){
+                //     foreach($not_processed_stores as $not_processed_store){
+                //         $cutoff_dates[$cutoff_date][] = $not_processed_store;
+                //     }
+                // }
             }
+            // dd($cutoff_dates);
+
+            // foreach($cutoff_dates as $index => $date){
+            //     $cut_offs[] = $index;
+            // }
+
+            // $cut_offs = $cutoff_dates;
+            // dd($cut_offs);
         }
-        // dd($cut_offs);
+
+
+
+        // Not Done Yet
+
+
+        // $dtr = DB::table('dtrs')
+        //                 ->where('')
+
+
+
+        // $posted_batch = PostedBatch::select('stores', 'cutoff_date')->get()->toArray();
+        // dd($posted_batch);
+
+        // $posted_cutoff = array_column($posted_batch, 'cutoff_date');
+        // $dtrs_store = DB::table('dtrs')
+        //                 ->whereIn('cutoff_date', $posted_cutoff)
+        //                 ->get()
+        //                 ->toArray();
+        // // dd($dtrs_store);
+
+        // // $stores = $cutoff_date[0]['stores'];
+        // // dd($stores);
+
+        // $cut_offs = DB::table('dtrs')
+        //                 // ->whereNotIn('cutoff_date', $posted_cutoff)  //
+        //                 ->groupBy('cutoff_date')
+        //                 ->get();
+        // // dd($cut_offs);
+
+        // $stores = DB::table('dtrs')
+        //             ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
+        //             ->select('');
+
+        dd($cut_offs);
 
         if(count($cut_offs) > 0){
             return view('admin.payroll.index', compact('cut_offs'));
@@ -333,23 +381,18 @@ class PayrollController extends Controller
                     ->toArray();
         // dd($batches);
 
-        $cutoff_dates = array_unique(array_column($batches, 'cutoff_date'));
-        // dd($cutoff_dates);
+        $cutoffs = [];
+        foreach($batches as $batch){
+            $batch->stores = explode('; ', $batch->stores);
+            $cutoffs[$batch->cutoff_date] = $batch->stores;
+        }
 
-        // $cutoffs = [];
-        // foreach($batches as $batch){
-        //     $batch->stores = explode('; ', $batch->stores);
-        //     $cutoffs[$batch->cutoff_date] = $batch->stores;
-        // }
         // dd($cutoffs);
-
         /*
             ==============================
         */
 
         $cut_offs = DB::table('employee_pays')
-                    ->select('cutoff_date')
-                    ->whereNotIn('cutoff_date', $cutoff_dates)
                     ->groupBy('cutoff_date')
                     ->get()
                     ->toArray();
@@ -389,7 +432,7 @@ class PayrollController extends Controller
         $batch->save();
 
         toastr()->success('Batch posted successfully!');
-        return redirect()->route('payroll.admin');
+        return redirect('/payroll');
     }
 
     public function checkSSS($gross){

@@ -36,6 +36,7 @@
         </div>
 
         <input type="hidden" name="batch_number" value="{{ $batch_number }}" class="batch_number">
+        <input type="hidden" name="processed_store" value="{{ $processed_store }}" class="processed_store">
 
         <div class="col-xl-12 mt-1" id="stores">
             <form method="POST" action="{{ route('payroll.postBatch') }}">
@@ -54,17 +55,20 @@
         // alert('hello');
         if($(".cutoff_date_hidden").val())
         {
+            console.log('cutoff_date not greater than 1');
             $("#stores form").empty();
 
             $("#stores form").append('@csrf');
 
-            let cutoff_date = $(".cutoff_date_hidden").val();
-
             let batch_number = $(".batch_number").val();
+            // console.log(batch_number);
+
+            let processed_store = $(".processed_store").val();
+            processed_store = processed_store.split("; ");
+            // console.log(processed_store);
 
             let selected_date = $(".cutoff_date_hidden").val()
-
-            // $('.pay-period').text('Pay Period: ' + selected_date);
+            // console.log(selected_date);
 
             var table_str = "<table id='stores-table'>" +
                                 "<thead class='mb-3'>" +
@@ -83,11 +87,12 @@
             url: "/fetch-processed-stores",
             type:"POST",
             data:{
+                batch_number: batch_number,
                 cutoff_date: selected_date,
                 _token: '{{ csrf_token() }}'
             },
             success:function(response){
-                // console.log(response);
+                console.log(response);
 
                 var len = 0;
                 // console.log(response['stores']);
@@ -100,23 +105,25 @@
                 if(len > 0) {
                     for(var i = 0; i < len; i++){
                         var store = response['stores'][i].store_assignment;
-                        // console.log(store);
+                        console.log(store);
 
-                        var tr_str =
-                                "<tr>" +
-                                    "<td>" +
-                                        "<div class='checkbox'>" +
-                                            "<label>" +
-                                                "<input type='checkbox' class='stores' name='stores[]' value='" + store +"'> " + store +
-                                            "</label>" +
-                                        "</div>" +
-                                    "</td>";
-                                "</tr>" +
+                        if(processed_store.includes(store)){
+                            var tr_str =
+                                    "<tr>" +
+                                        "<td>" +
+                                            "<div class='checkbox'>" +
+                                                "<label>" +
+                                                    "<input type='checkbox' class='stores' name='stores[]' value='" + store +"'> " + store +
+                                                "</label>" +
+                                            "</div>" +
+                                        "</td>" +
+                                    "</tr>";
 
-                        $("#stores-table tbody").append(tr_str);
+                            $("#stores-table tbody").append(tr_str);
+                        }
                     }
 
-                    var process_str = "<input type='hidden' name='cutoff_date' value='" + cutoff_date + "'>" +
+                    var process_str = "<input type='hidden' name='cutoff_date' value='" + selected_date + "'>" +
                     '<input type="hidden" name="batch_number" value="' + batch_number + '">' +
                     '<input class="btn btn-outline-warning" id="post-batch" type="submit" value="Post Batch">';
 
@@ -129,12 +136,21 @@
         $("#cutoff_date").change(function(event){
             event.preventDefault();
 
+            console.log('cutoff_date greater than 1');
             $("#stores form").empty();
 
             $("#stores form").append('@csrf');
 
+            let batch_number = $(".batch_number").val();
+            // console.log(batch_number);
+
+            let processed_store = $(".processed_store").val();
+            processed_store = processed_store.split("; ");
+            // console.log(processed_store);
+
             let $this = $(this);
             let selected_date = $this.val();
+            // console.log(selected_date);
 
             $('.pay-period').text('Pay Period: ' + selected_date);
 
@@ -155,11 +171,12 @@
             url: "/fetch-stores",
             type:"POST",
             data:{
+                batch_number: batch_number,
                 cutoff_date: selected_date,
                 _token: '{{ csrf_token() }}'
             },
             success:function(response){
-                // console.log(response);
+                console.log(response);
 
                 var len = 0;
                 // console.log(response['stores']);
@@ -174,21 +191,24 @@
                         var store = response['stores'][i].store_assignment;
                         // console.log(store);
 
-                        var tr_str =
-                                "<tr>" +
-                                    "<td>" +
-                                        "<div class='checkbox'>" +
-                                            "<label>" +
-                                                "<input type='checkbox' name='stores[]' value='"+ store +"'> " + store +
-                                            "</label>" +
-                                        "</div>" +
-                                    "</td>";
-                                "</tr>" +
+                        if(processed_store.includes(store)){
+                            var tr_str =
+                                    "<tr>" +
+                                        "<td>" +
+                                            "<div class='checkbox'>" +
+                                                "<label>" +
+                                                    "<input type='checkbox' class='stores' name='stores[]' value='" + store +"'> " + store +
+                                                "</label>" +
+                                            "</div>" +
+                                        "</td>" +
+                                    "</tr>";
 
-                        $("#stores-table tbody").append(tr_str);
+                            $("#stores-table tbody").append(tr_str);
+                        }
                     }
 
                     var process_str = "<input type='hidden' name='cutoff_date' value='" + response['cutoff_date'] + "''>" +
+                    '<input type="hidden" name="batch_number" value="' + batch_number + '">' +
                     "<button class='process_summary' id='process_summary' name='process_summary' value='submit'>Process Payroll</button>";
 
                     $("#stores-table tbody").append(process_str);

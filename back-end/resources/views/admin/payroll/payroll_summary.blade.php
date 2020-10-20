@@ -137,7 +137,13 @@
 
                 <button class="btn btn-success disabled" id="btn-Validate" aria-disabled="true" disabled>Validate</button>
             @else
-                <button class="btn btn-success" id="btn-Validate">Validate</button>
+                <form action="{{ route('payroll.dtrPayrollSummary') }}" method="POST">
+                    @csrf
+                    @foreach($stores as $store)
+                        <input type="hidden" name="validate_store[]" value="{{ $store }}">
+                    @endforeach
+                    <input type="submit" class="btn btn-success" id="btn-Validate" value="Validate">
+                </form>
             @endif
 
             <button class="btn btn-outline-danger" id="btn-Cancel">Cancel</button>
@@ -215,9 +221,9 @@
     });
 
     $('#btn-Validate').click(function(e){
-        e.preventDefault();
+        // e.preventDefault();
         alert('Data saved successfully!');
-        window.location.href = "{{ route('payroll.dtrPayrollSummary') }}";
+        $(this).submit();
     });
 </script>
 @endsection

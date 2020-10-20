@@ -14,77 +14,44 @@ use Illuminate\Support\Facades\DB;
 class PayrollController extends Controller
 {
     public function index(){
+        $posted_batches = PostedBatch::select('stores', 'cutoff_date')->get()->toArray();
+        // dd($cutoff_date);
 
-        $processed_dtr = DB::table('employee_pays')
-                            ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
-                            ->select('employee_pays.cutoff_date', 'employee_profiles.store_assignment')
-                            ->groupBy('employee_profiles.store_assignment')
-                            ->get()
-                            ->toArray();
-        // dd($processed_dtr);
+        $stores = [];
+        $cutoff_dates = [];
+        // foreach($posted_batches as $posted_batch){
+        //     $store = explode("; ", $posted_batch['stores']);
+        //     $stores[] = $store;
+        //     $cutoff_dates[] = $posted_batch['cutoff_date'];
+        // }
 
-        // $processed_dtr = [];
-        $cut_offs = [];
-        if(empty($processed_dtr)){
-            $dtrs = DB::table('dtrs')
-                        ->select('cutoff_date')
-                        ->groupBy('cutoff_date')
-                        ->get()
-                        ->toArray();
-            $cut_offs = array_column($dtrs, 'cutoff_date');
-            // dd($cut_offs);
-        }else{
-            $dtrs = DB::table('dtrs')
-                        ->select('cutoff_date')
-                        ->groupBy('cutoff_date')
-                        ->get()
-                        ->toArray();
-            $cut_offs = array_column($dtrs, 'cutoff_date');
-            // $cut_offs = $dtrs;
-            // dd($cut_offs);
+        $stores = array_column($posted_batches, 'stores', 'cutoff_date');
+        // dd($stores);
+        // dd($cutoff_dates);
 
-            $cutoff_processed_dtr_dates = array_column($processed_dtr, 'cutoff_date');
-            // dd($cutoff_processed_dtr_dates);
+        $sample = DB::table('posted_batches')
+                    ->where('cutoff_date', '2020-05-26')
+                    ->select('stores')
+                    ->get()
+                    ->toArray();
 
-            // Processed_stores
-            $stores = [];
-            for($i = 0; $i < count($processed_dtr); $i++){
-                if($cutoff_processed_dtr_dates[$i] == $processed_dtr[$i]->cutoff_date)
-                {
-                    $stores[$processed_dtr[$i]->cutoff_date][] = $processed_dtr[$i]->store_assignment;
-                }
-            }
-            // dd($stores);
-
-
-            $cutoff_dates = [];
-            foreach($stores as $cutoff_date => $store){
-                // dd($store);
-                // $store = ['SM Sta. Rosa', 'San Pedro United', 'Muntinlupa Bayan', 'SM Tunasan'];
-                $not_processed_stores = DB::table('dtrs')
-                                        ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
-                                        ->select('employee_profiles.store_assignment')
-                                        ->whereNotIn('employee_profiles.store_assignment', $store)
-                                        ->where('cutoff_date', $cutoff_date)
-                                        ->groupBy('employee_profiles.store_assignment')
-                                        ->get()
-                                        ->toArray();
-                // dd($not_processed_stores);
-
-                // dd($cutoff_date);
-
-                if(empty($not_processed_stores)){
-                    if(in_array($cutoff_date, $cut_offs)){
-                        $index = array_search($cutoff_date, $cut_offs);
-                        unset($cut_offs[$index]);
-                    }
-                }
-            }
+        $sampleee = [];
+        foreach($sample as $samplee){
+            $sampleee[] = explode("; ", $samplee->stores);
         }
+        // dd($sampleee);
+
+        $cut_offs = DB::table('dtrs')
+                        ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
+                        // ->whereNotIn('dtrs.cutoff_date', $cutoff_dates)
+                        ->whereNotIn('employee_profiles.store_assignment', $stores)
+                        ->groupBy('dtrs.cutoff_date')
+                        ->get();
         // dd($cut_offs);
 
+
         if(count($cut_offs) > 0){
-            return view('admin.payroll.index', compact('cut_offs'));
+            return view('admin.payroll.index', compact('cut_offs', 'stores'));
         }
 
         return view('admin.payroll.index');
@@ -92,64 +59,35 @@ class PayrollController extends Controller
 
     public function fetchStores(Request $request){
         $data = $request->all();
-        // dd($data);
 
-        $processed_dtr = DB::table('employee_pays')
-                            ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
-                            ->select('employee_pays.cutoff_date', 'employee_profiles.store_assignment')
-                            ->groupBy('employee_profiles.store_assignment')
-                            ->where('employee_pays.cutoff_date', $data['cutoff_date'])
-                            ->get()
-                            ->toArray();
-        // dd($processed_dtr);
+        // foreach($data['stores'] as $stores)
+        // {
+        //     $store = explode("; ", $stores);
+        //     // echo "<script>console.log('".$store."')</script>";
+        // }
 
-        $stores = [];
-        if(empty($processed_dtr)){
-            $dtrs = DB::table('dtrs')
-                        ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
-                        ->select('employee_profiles.store_assignment')
-                        ->where('dtrs.cutoff_date', $data['cutoff_date'])
-                        ->groupBy('employee_profiles.store_assignment')
-                        ->get()
-                        ->toArray();
-            $stores = $dtrs;
-        }else{
+        $stores = DB::table('posted_batches')
+                    ->where('cutoff_date', $data['cutoff_date'])
+                    ->select('stores')
+                    ->get()
+                    ->toArray();
 
-            $cutoff_processed_dtr_dates = array_column($processed_dtr, 'cutoff_date');
-            // dd($cutoff_processed_dtr_dates);
+        // $stores = explode($s)
 
-            $processed_stores = [];
-            for($i = 0; $i < count($processed_dtr); $i++){
-                if($cutoff_processed_dtr_dates[$i] == $processed_dtr[$i]->cutoff_date)
-                {
-                    $processed_stores[$processed_dtr[$i]->cutoff_date][] = $processed_dtr[$i]->store_assignment;
-                }
-            }
-            // dd($stores);
+        $dtrs = DB::table('dtrs')
+                    ->where('cutoff_date', $data['cutoff_date'])
+                    ->get()
+                    ->toArray();
 
-            $not_processed = [];
-            foreach($processed_stores as $cutoff_date => $store){
-                // dd($store);
-                // $store = ['SM Sta. Rosa', 'San Pedro United', 'Muntinlupa Bayan', 'SM Tunasan'];
-                $not_processed_stores = DB::table('dtrs')
-                                        ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
-                                        ->select('employee_profiles.store_assignment')
-                                        ->whereNotIn('employee_profiles.store_assignment', $store)
-                                        ->where('cutoff_date', $cutoff_date)
-                                        ->groupBy('employee_profiles.store_assignment')
-                                        ->get()
-                                        ->toArray();
-                // dd($not_processed_stores);
+        $dtrs_emp_num = array_column($dtrs, 'emp_num');
 
-                if(!(empty($not_processed_stores))){
-                    foreach($not_processed_stores as $not_processed_store){
-                        $not_processed[] = $not_processed_store;
-                    }
-                }
-            }
-
-            $stores = $not_processed;
-        }
+        $stores = DB::table('employees')
+                    ->join('employee_profiles', 'employees.emp_num', 'employee_profiles.emp_num')
+                    ->whereIn('employees.emp_num', $dtrs_emp_num)
+                    ->select('employees.emp_num', 'employee_profiles.store_assignment')
+                    ->groupBy('employee_profiles.store_assignment')
+                    ->get();
+        // dd($stores);
 
         return response()->json(array('stores' => $stores, 'cutoff_date'=> $data['cutoff_date']), 200);
     }
@@ -164,13 +102,13 @@ class PayrollController extends Controller
 
         $cutoff_date = $data['cutoff_date'];
         $stores = $data['stores'];
-        // dd($stores);
 
         $employees = DB::table('dtrs')
                     ->join('employee_profiles', 'dtrs.emp_num', 'employee_profiles.emp_num')
                     ->where('cutoff_date', $cutoff_date)
                     ->whereIn('employee_profiles.store_assignment', $stores)
                     ->get();
+
         // dd($employees);
 
         // Employees who have wrong basic daily rate
@@ -228,7 +166,7 @@ class PayrollController extends Controller
                 if(!(count($employee) > 0)){
                     $employee_pay = EmployeePay::create($pay);
                 }
-                // $special = EmployeePay::create($pay);
+                // $special = EmployeePay::create($pay)
             }
             // dd($cutoff_date);
 
@@ -239,18 +177,13 @@ class PayrollController extends Controller
         return view('admin.payroll.payroll_summary', compact('empPay', 'cutoff_date', 'stores', 'emptySSS', 'emptyPhilhealth', 'emptyPagibig', 'wrongRate', 'moreThanTen'));
     }
 
-    public function dtrPayrollSummary(Request $request){
-        // dd($request);
-        $validate_store = $request->validate_store;
-        // dd($validate_store);
-
+    public function dtrPayrollSummary(){
         $payroll_summary = DB::table('employee_pays')
                                 ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
                                 ->select('employee_profiles.store_assignment',
                                         DB::raw('count(employee_pays.emp_num) as headcount'),
                                         DB::raw('sum(employee_pays.basic_pay) as basic_pay'),
                                         'employee_pays.cutoff_date')
-                                ->whereIn('employee_profiles.store_assignment', $validate_store)
                                 ->groupBy('employee_profiles.store_assignment')
                                 ->get()
                                 ->toArray();
@@ -265,7 +198,7 @@ class PayrollController extends Controller
                             ->whereIn('employee_profiles.store_assignment', $stores)
                             ->get()
                             ->toArray();
-        // dd($payroll_emp);
+        // dd($pay_emp_num);
 
         $pay_emp_num = array_column($payroll_emp, 'emp_num');
         // dd($pay_emp_num);
@@ -314,61 +247,50 @@ class PayrollController extends Controller
     }
 
     public function showProcessedInfo(Request $request){
-        // dd($request);
-
-        $processed_store = $request->processed_store;
-        // dd($processed_store);
-
         $batch_number = $request->batch_number;
+
         // dd($batch_number);
 
-
-        /* Not yet done
-            =============================
-        */
-
-        $batches = DB::table('posted_batches')
-                    ->select('stores', 'cutoff_date')
-                    ->get()
-                    ->toArray();
-        // dd($batches);
-
-        $cutoff_dates = array_unique(array_column($batches, 'cutoff_date'));
-        // dd($cutoff_dates);
-
-        // $cutoffs = [];
-        // foreach($batches as $batch){
-        //     $batch->stores = explode('; ', $batch->stores);
-        //     $cutoffs[$batch->cutoff_date] = $batch->stores;
-        // }
-        // dd($cutoffs);
-
-        /*
-            ==============================
-        */
-
         $cut_offs = DB::table('employee_pays')
-                    ->select('cutoff_date')
-                    ->whereNotIn('cutoff_date', $cutoff_dates)
                     ->groupBy('cutoff_date')
                     ->get()
                     ->toArray();
         // dd($cut_offs);
 
-        $processed_store = implode("; ", $processed_store);
+        $emp_pay = DB::table('employee_pays')
+                    ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
+                    ->get();
+        // dd($emp_pay);
 
-        return view('admin.payroll.processed_info', compact('cut_offs', 'batch_number', 'cutoffs', 'processed_store'));
+        return view('admin.payroll.processed_info', compact('cut_offs', 'batch_number'));
     }
 
     public function fetchProcessedStores(Request $request){
         $data = $request->all();
         // dd($data);
 
+        // $dtrs = DB::table('dtrs')
+        //             ->where('cutoff_date', $data['cutoff_date'])
+        //             ->get()
+        //             ->toArray();
+        // dd($dtrs);
+
+        // $dtrs_emp_num = array_column($dtrs, 'emp_num');
+        // dd($dtrs_emp_num);
+
         $stores = DB::table('employee_pays')
                     ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
                     ->select('employee_profiles.store_assignment')
                     ->groupBy('employee_profiles.store_assignment')
                     ->get();
+
+        // $stores = DB::table('employees')
+        //             ->join('employee_profiles', 'employees.emp_num', 'employee_profiles.emp_num')
+        //             ->whereIn('employees.emp_num', $dtrs_emp_num)
+        //             ->select('employees.emp_num', 'employee_profiles.store_assignment')
+        //             ->groupBy('employee_profiles.store_assignment')
+        //             ->get();
+        // dd($stores);
 
         return response()->json(array('stores'=> $stores, 'data' => $data), 200);
     }
@@ -389,7 +311,7 @@ class PayrollController extends Controller
         $batch->save();
 
         toastr()->success('Batch posted successfully!');
-        return redirect()->route('payroll.admin');
+        return redirect('/payroll');
     }
 
     public function checkSSS($gross){

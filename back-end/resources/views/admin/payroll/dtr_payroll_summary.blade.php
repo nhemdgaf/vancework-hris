@@ -71,6 +71,9 @@
         <div class="modal-content">
             <form method="POST" action="{{ route('payroll.processedInfo') }}">
                 @csrf
+                @foreach($stores as $store)
+                    <input type="hidden" name="processed_store[]" value="{{ $store }}">
+                @endforeach
                 <div class="modal-header">
                     {{-- <i class="fas fa-question mt-1 mr-2 text-gray-400"></i> --}}
                     <h5 class="modal-title" id="ConfirmPostingTitle">Generated Batch Number: {{ $batch }}</h5>

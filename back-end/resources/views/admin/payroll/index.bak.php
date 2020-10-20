@@ -13,13 +13,18 @@
     <div class="row">
         <div class="col-xl-4">
             <h1 class="success"></h1>
+            @if(isset($stores))
+                @foreach($stores as $index => $store)
+                    <input type="hidden" name="store[]" value="{{ $index }}; {{ $store }}" class="store">
+                @endforeach
+            @endif
             @if(isset($cut_offs))
                 <form id="cut-off">
                     <label class="date-label" for="cutoff_date">Cut-off:</label>
                     <select name="cutoff_date" id="cutoff_date">
                         <option selected disabled>Select cut-off period</option>
                         @foreach($cut_offs as $cut_off)
-                            <option value="{{ $cut_off }}">{{ $cut_off }}</option>
+                            <option value="{{ $cut_off->cutoff_date }}">{{ $cut_off->cutoff_date }}</option>
                         @endforeach
                     </select>
                     {{-- <input type="date" id="cutoff_date" name="cutoff_date"> --}}
@@ -57,13 +62,15 @@
 
         let $this = $(this);
         let selected_date = $this.val();
+        let stores = $(".store").map((_,el) => el.value).get();
+        console.log(stores);
 
         $('.pay-period').text('Pay Period: ' + selected_date);
 
         var table_str = "<table id='stores-table'>" +
                             "<thead class='mb-3'>" +
                                 "<tr>" +
-                                    "<th scope='col'>List of Not Processed Stores</th>" +
+                                    "<th scope='col'>List of Stores</th>" +
                                 "</tr>" +
                             "</thead>" +
                             "<tbody>" +
@@ -77,11 +84,12 @@
           url: "/fetch-stores",
           type:"POST",
           data:{
+            stores: stores,
             cutoff_date: selected_date,
             _token: '{{ csrf_token() }}'
           },
           success:function(response){
-            console.log(response);
+            // console.log(response);
 
             var len = 0;
             // console.log(response['stores']);
