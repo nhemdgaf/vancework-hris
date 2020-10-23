@@ -316,11 +316,46 @@ class PayrollController extends Controller
     public function showProcessedInfo(Request $request){
         // dd($request);
 
-        $processed_store = $request->processed_store;
+        $r_processed_store = $request->processed_store;
         // dd($processed_store);
 
-        $batch_number = $request->batch_number;
+        $r_batch_number = $request->batch_number;
         // dd($batch_number);
+
+        $r_cutoff_date = $request->cutoff_date;
+        // dd($cutoff_date);
+
+        // $posted_batches = DB::table('posted_batches')
+        //                     ->where('cutoff_date', $r_cutoff_date)
+        //                     ->get()
+        //                     ->toArray();
+        // // dd($posted_batches[0]->stores);
+
+        // $cutoff_posted_stores = [];
+        // foreach($posted_batches as $batch)
+        // {
+        //     $stores = explode("; ", $batch->stores);
+        //     // dd($stores);
+        //     $cutoff_posted_stores[$batch->cutoff_date] = [];
+        //     // dd($cutoff_date_stores[$batch->cutoff_date]);
+
+        //     foreach($stores as $store){
+        //         array_push($cutoff_posted_stores[$batch->cutoff_date], $store);
+        //     }
+        //     // array_push($cutoff_date_stores[$batch->cutoff_date], $stores);
+        // }
+        // // dd($cutoff_posted_stores);
+
+
+        $employee_pays = DB::table('employee_pays')
+                            ->join('employee_profiles', 'employee_pays.emp_num', 'employee_profiles.emp_num')
+                            ->select('employee_pays.cutoff_date', 'employee_profiles.store_assignment')
+                            ->whereNotIn('employee_profiles.store_assignment', $r_cutoff_date)
+                            ->groupBy('employee_profiles.store_assignment')
+                            ->get();
+        dd($employee_pays);
+
+
 
 
         /* Not yet done
@@ -336,11 +371,11 @@ class PayrollController extends Controller
         $cutoff_dates = array_unique(array_column($batches, 'cutoff_date'));
         // dd($cutoff_dates);
 
-        // $cutoffs = [];
-        // foreach($batches as $batch){
-        //     $batch->stores = explode('; ', $batch->stores);
-        //     $cutoffs[$batch->cutoff_date] = $batch->stores;
-        // }
+        $cutoffs = [];
+        foreach($batches as $batch){
+            $batch->stores = explode('; ', $batch->stores);
+            $cutoffs[$batch->cutoff_date][] = $batch->stores;
+        }
         // dd($cutoffs);
 
         /*

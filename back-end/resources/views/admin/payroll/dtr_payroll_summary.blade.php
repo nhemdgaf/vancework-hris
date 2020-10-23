@@ -74,6 +74,7 @@
                 @foreach($stores as $store)
                     <input type="hidden" name="processed_store[]" value="{{ $store }}">
                 @endforeach
+                    <input type="hidden" name="cutoff_date" value="{{ $cutoff_date }}">
                 <div class="modal-header">
                     {{-- <i class="fas fa-question mt-1 mr-2 text-gray-400"></i> --}}
                     <h5 class="modal-title" id="ConfirmPostingTitle">Generated Batch Number: {{ $batch }}</h5>
